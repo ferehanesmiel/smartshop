@@ -93,7 +93,10 @@ const Dashboard = () => {
     const salesRef = collection(db, 'sales');
     const qSales = query(salesRef, where('shopId', '==', shop.shopId), where('createdAt', '>=', today.toISOString()), orderBy('createdAt', 'desc'));
     const unsubscribeSales = onSnapshot(qSales, (snapshot) => {
-      const sales = snapshot.docs.map(doc => doc.data() as Sale);
+      const sales = snapshot.docs.map(doc => ({
+        saleId: doc.id,
+        ...doc.data()
+      } as Sale));
       const total = sales.reduce((acc, sale) => acc + sale.totalAmount, 0);
       setStats(prev => ({ ...prev, todaySales: total }));
       setRecentSales((sales || []).slice(0, 5));
@@ -289,7 +292,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card, i) => (
           <motion.div
-            key={i}
+            key={card.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}

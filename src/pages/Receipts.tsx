@@ -200,7 +200,7 @@ const Receipts = () => {
                 {/* Items */}
                 <div className="space-y-4 mb-8">
                   {selectedReceipt.items.map((item, i) => (
-                    <div key={i} className="flex justify-between items-start text-sm">
+                    <div key={item.productId} className="flex justify-between items-start text-sm">
                       <div className="flex-1">
                         <p className="font-bold text-gray-900">{item.productName}</p>
                         <p className="text-xs text-gray-500">{item.quantity} x {item.price.toLocaleString()} ETB</p>

@@ -182,7 +182,7 @@ const Orders = () => {
                   <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Items</p>
                   <div className="space-y-3">
                     {selectedOrder.products.map((item, i) => (
-                      <div key={i} className="flex items-center justify-between text-sm">
+                      <div key={item.productId} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
                             <Package className="w-4 h-4 text-gray-400" />

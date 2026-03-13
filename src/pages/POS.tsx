@@ -379,7 +379,7 @@ const POS = () => {
                   </div>
                   <div className="space-y-2 mb-4">
                     {lastSale.items.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm">
+                      <div key={item.productId} className="flex justify-between text-sm">
                         <span>{item.productName} x{item.quantity}</span>
                         <span className="font-medium">{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
