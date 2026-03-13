@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { Shop } from '../types';
 import { Search, Store, Calendar } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 
 const AdminShops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
@@ -20,6 +21,9 @@ const AdminShops = () => {
         ...doc.data()
       } as Shop));
       setShops(shopsData);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'shops');
       setLoading(false);
     });
 

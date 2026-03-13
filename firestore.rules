@@ -79,5 +79,10 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow read, write: if isAdmin();
     }
+
+    match /siteSettings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

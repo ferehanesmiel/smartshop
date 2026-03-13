@@ -20,6 +20,7 @@ import { motion } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '../lib/utils';
 import { Link } from 'react-router-dom';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 
 const Dashboard = () => {
   const { shop, user } = useAuth();
@@ -84,6 +85,8 @@ const Dashboard = () => {
         totalProducts: products.length,
         lowStock: products.filter(p => p.quantity <= 5).length
       }));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'products');
     });
 
     // Listen for today's sales
@@ -94,6 +97,8 @@ const Dashboard = () => {
       const total = sales.reduce((acc, sale) => acc + sale.totalAmount, 0);
       setStats(prev => ({ ...prev, todaySales: total }));
       setRecentSales(sales.slice(0, 5));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'sales');
     });
 
     // Listen for pending orders
@@ -101,6 +106,8 @@ const Dashboard = () => {
     const qOrders = query(ordersRef, where('shopId', '==', shop.shopId), where('status', '==', 'pending'));
     const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
       setStats(prev => ({ ...prev, pendingOrders: snapshot.size }));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'orders');
     });
 
     setLoading(false);

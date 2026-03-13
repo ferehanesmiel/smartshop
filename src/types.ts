@@ -1,3 +1,12 @@
+export interface SiteSettings {
+  siteName: string;
+  primaryColor: string;
+  heroHeadline: string;
+  heroSubheadline: string;
+  contactEmail: string;
+  contactPhone: string;
+}
+
 export interface Shop {
   shopId: string;
   shopName: string;

@@ -24,6 +24,12 @@ import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import AdminPanel from './pages/AdminPanel';
 import AdminShops from './pages/AdminShops';
+import AdminOrders from './pages/AdminOrders';
+import AdminSiteControl from './pages/AdminSiteControl';
+import AdminSubscriptions from './pages/AdminSubscriptions';
+import AdminRevenue from './pages/AdminRevenue';
+import AdminAnalytics from './pages/AdminAnalytics';
+import AdminSettings from './pages/AdminSettings';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -121,6 +127,12 @@ export default function App() {
           }>
             <Route index element={<AdminPanel />} />
             <Route path="shops" element={<AdminShops />} />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="revenue" element={<AdminRevenue />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="site-control" element={<AdminSiteControl />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Routes>
       </Router>

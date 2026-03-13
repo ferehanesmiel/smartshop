@@ -29,6 +29,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Orders', icon: ClipboardList, path: '/admin/orders' },
     { name: 'Revenue', icon: BarChart3, path: '/admin/revenue' },
     { name: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
+    { name: 'Site Control', icon: Settings, path: '/admin/site-control' },
     { name: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 
