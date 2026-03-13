@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -25,8 +25,8 @@ const Orders = () => {
   useEffect(() => {
     if (!shop) return;
 
-    const ordersRef = collection(db, 'shops', shop.shopId, 'orders');
-    const q = query(ordersRef, orderBy('createdAt', 'desc'));
+    const ordersRef = collection(db, 'orders');
+    const q = query(ordersRef, where('shopId', '==', shop.shopId), orderBy('createdAt', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({
@@ -43,7 +43,7 @@ const Orders = () => {
   const updateStatus = async (orderId: string, status: Order['status']) => {
     if (!shop) return;
     try {
-      await updateDoc(doc(db, 'shops', shop.shopId, 'orders', orderId), { status });
+      await updateDoc(doc(db, 'orders', orderId), { status });
       setSelectedOrder(null);
     } catch (err) {
       console.error('Error updating status:', err);
@@ -114,7 +114,7 @@ const Orders = () => {
                 <p className="text-sm text-gray-600">
                   <span className="font-bold">{order.products.length}</span> items
                 </p>
-                <p className="text-lg font-bold text-gray-900">{order.total.toLocaleString()} ETB</p>
+                <p className="text-lg font-bold text-gray-900">{order.totalAmount.toLocaleString()} ETB</p>
               </div>
             </motion.div>
           ))
@@ -179,7 +179,7 @@ const Orders = () => {
 
                 <div className="pt-4 border-t border-gray-100 flex justify-between items-center font-bold text-xl">
                   <span>Total</span>
-                  <span className="text-emerald-600">{selectedOrder.total.toLocaleString()} ETB</span>
+                  <span className="text-emerald-600">{selectedOrder.totalAmount.toLocaleString()} ETB</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-4">

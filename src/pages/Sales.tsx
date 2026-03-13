@@ -23,8 +23,8 @@ const Sales = () => {
   useEffect(() => {
     if (!shop) return;
 
-    const salesRef = collection(db, 'shops', shop.shopId, 'sales');
-    const q = query(salesRef, orderBy('createdAt', 'desc'));
+    const salesRef = collection(db, 'sales');
+    const q = query(salesRef, where('shopId', '==', shop.shopId), orderBy('createdAt', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const salesData = snapshot.docs.map(doc => ({
@@ -132,7 +132,7 @@ const Sales = () => {
                       <div className="flex -space-x-2">
                         {sale.items.slice(0, 3).map((item, i) => (
                           <div key={i} className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[8px] font-bold">
-                            {item.name[0]}
+                            {item.productName[0]}
                           </div>
                         ))}
                         {sale.items.length > 3 && (
@@ -143,7 +143,7 @@ const Sales = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-bold text-gray-900">{sale.total.toLocaleString()} ETB</p>
+                      <p className="text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-600">

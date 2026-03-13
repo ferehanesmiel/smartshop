@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -23,8 +23,8 @@ const Customers = () => {
   useEffect(() => {
     if (!shop) return;
 
-    const customersRef = collection(db, 'shops', shop.shopId, 'customers');
-    const q = query(customersRef, orderBy('createdAt', 'desc'));
+    const customersRef = collection(db, 'customers');
+    const q = query(customersRef, where('shopId', '==', shop.shopId), orderBy('lastPurchaseDate', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const customersData = snapshot.docs.map(doc => ({
@@ -112,12 +112,12 @@ const Customers = () => {
               <div className="grid grid-cols-2 gap-4 mt-6">
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Total Visits</p>
-                  <p className="text-lg font-bold text-gray-900">{customer.purchaseHistory.length}</p>
+                  <p className="text-lg font-bold text-gray-900">{customer.purchaseCount}</p>
                 </div>
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Last Visit</p>
                   <p className="text-sm font-bold text-gray-900">
-                    {customer.purchaseHistory.length > 0 ? 'Recently' : 'Never'}
+                    {customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'Never'}
                   </p>
                 </div>
               </div>

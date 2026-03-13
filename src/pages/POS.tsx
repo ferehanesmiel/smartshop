@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, addDoc, doc, updateDoc, increment, setDoc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, increment, setDoc, getDoc, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -31,8 +31,9 @@ const POS = () => {
   useEffect(() => {
     if (!shop) return;
 
-    const productsRef = collection(db, 'shops', shop.shopId, 'products');
-    const unsubscribe = onSnapshot(productsRef, (snapshot) => {
+    const productsRef = collection(db, 'products');
+    const q = query(productsRef, where('shopId', '==', shop.shopId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const productsData = snapshot.docs.map(doc => ({
         productId: doc.id,
         ...doc.data()
@@ -90,20 +91,26 @@ const POS = () => {
 
     const saleData: Omit<Sale, 'saleId'> = {
       shopId: shop.shopId,
-      items: cart,
-      total,
+      items: cart.map(item => ({
+        productId: item.productId,
+        productName: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalAmount: total,
+      paymentMethod: 'cash', // Default to cash
       customerPhone,
       createdAt: new Date().toISOString(),
     };
 
     try {
       // 1. Save Sale
-      const saleRef = await addDoc(collection(db, 'shops', shop.shopId, 'sales'), saleData);
+      const saleRef = await addDoc(collection(db, 'sales'), saleData);
       const saleId = saleRef.id;
 
       // 2. Update Stock for each item
       for (const item of cart) {
-        const productRef = doc(db, 'shops', shop.shopId, 'products', item.productId);
+        const productRef = doc(db, 'products', item.productId);
         await updateDoc(productRef, {
           quantity: increment(-item.quantity)
         });
@@ -111,13 +118,14 @@ const POS = () => {
 
       // 3. Update/Create Customer
       if (customerPhone) {
-        const customerRef = doc(db, 'shops', shop.shopId, 'customers', customerPhone);
+        const customerRef = doc(db, 'customers', customerPhone);
         const customerSnap = await getDoc(customerRef);
         
         if (customerSnap.exists()) {
           await updateDoc(customerRef, {
-            purchaseHistory: [...(customerSnap.data().purchaseHistory || []), saleId],
-            loyaltyPoints: increment(Math.floor(total / 100)) // 1 point per 100 ETB
+            purchaseCount: increment(1),
+            loyaltyPoints: increment(Math.floor(total / 100)), // 1 point per 100 ETB
+            lastPurchaseDate: new Date().toISOString()
           });
         } else {
           await setDoc(customerRef, {
@@ -125,9 +133,9 @@ const POS = () => {
             shopId: shop.shopId,
             name: customerName || 'Valued Customer',
             phone: customerPhone,
-            purchaseHistory: [saleId],
+            purchaseCount: 1,
             loyaltyPoints: Math.floor(total / 100),
-            createdAt: new Date().toISOString()
+            lastPurchaseDate: new Date().toISOString()
           });
         }
       }
@@ -149,7 +157,7 @@ const POS = () => {
 
   const sendReceiptWhatsApp = () => {
     if (!lastSale || !customerPhone) return;
-    const message = `Receipt from ${shop?.shopName}\nSale ID: ${lastSale.saleId.slice(0, 6)}\nTotal: ${lastSale.total} ETB\nThank you for shopping with us!`;
+    const message = `Receipt from ${shop?.shopName}\nSale ID: ${lastSale.saleId.slice(0, 6)}\nTotal: ${lastSale.totalAmount} ETB\nThank you for shopping with us!`;
     window.open(`https://wa.me/${customerPhone.replace(/\s+/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -180,9 +188,9 @@ const POS = () => {
               className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex flex-col group disabled:opacity-50"
             >
               <div className="aspect-square rounded-xl bg-gray-50 mb-3 overflow-hidden relative">
-                {product.image && (
+                {product.imageUrl && (
                   <img 
-                    src={product.image} 
+                    src={product.imageUrl} 
                     alt={product.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                     referrerPolicy="no-referrer"
@@ -326,14 +334,14 @@ const POS = () => {
                   <div className="space-y-2 mb-4">
                     {lastSale.items.map((item, i) => (
                       <div key={i} className="flex justify-between text-sm">
-                        <span>{item.name} x{item.quantity}</span>
+                        <span>{item.productName} x{item.quantity}</span>
                         <span className="font-medium">{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
                   <div className="border-t border-gray-200 pt-4 flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>{lastSale.total.toLocaleString()} ETB</span>
+                    <span>{lastSale.totalAmount.toLocaleString()} ETB</span>
                   </div>
                 </div>
 

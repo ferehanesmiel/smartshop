@@ -4,11 +4,12 @@ export interface Shop {
   ownerName: string;
   phone: string;
   email: string;
-  plan: 'free' | 'basic' | 'premium';
+  address?: string;
+  subscriptionPlan: 'basic' | 'pro' | 'premium';
+  status: 'active' | 'suspended';
   createdAt: string;
   ownerUid: string;
   slug: string;
-  status: 'active' | 'inactive';
 }
 
 export interface Product {
@@ -17,23 +18,25 @@ export interface Product {
   name: string;
   price: number;
   quantity: number;
-  image?: string;
   category: string;
+  barcode?: string;
+  imageUrl?: string;
   createdAt: string;
 }
 
 export interface SaleItem {
   productId: string;
-  name: string;
-  price: number;
+  productName: string;
   quantity: number;
+  price: number;
 }
 
 export interface Sale {
   saleId: string;
   shopId: string;
   items: SaleItem[];
-  total: number;
+  totalAmount: number;
+  paymentMethod: 'cash' | 'mobile' | 'card';
   customerPhone?: string;
   createdAt: string;
 }
@@ -43,9 +46,9 @@ export interface Customer {
   shopId: string;
   name: string;
   phone: string;
-  purchaseHistory: string[]; // Sale IDs
+  purchaseCount: number;
   loyaltyPoints: number;
-  createdAt: string;
+  lastPurchaseDate?: string;
 }
 
 export interface OrderItem {
@@ -59,9 +62,26 @@ export interface Order {
   orderId: string;
   shopId: string;
   customerPhone: string;
-  customerName: string;
+  customerName?: string;
   products: OrderItem[];
-  status: 'pending' | 'accepted' | 'rejected' | 'completed';
-  total: number;
+  totalAmount: number;
+  status: 'pending' | 'accepted' | 'completed' | 'rejected';
+  createdAt: string;
+}
+
+export interface Subscription {
+  subscriptionId: string;
+  shopId: string;
+  plan: 'basic' | 'pro' | 'premium';
+  startDate: string;
+  endDate: string;
+  paymentStatus: 'paid' | 'unpaid';
+}
+
+export interface Admin {
+  adminId: string;
+  name: string;
+  email: string;
+  role: string;
   createdAt: string;
 }

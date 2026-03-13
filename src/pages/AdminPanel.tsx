@@ -17,6 +17,7 @@ import { cn } from '../lib/utils';
 
 const AdminPanel = () => {
   const [shops, setShops] = useState<Shop[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +25,7 @@ const AdminPanel = () => {
     const shopsRef = collection(db, 'shops');
     const q = query(shopsRef, orderBy('createdAt', 'desc'));
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeShops = onSnapshot(q, (snapshot) => {
       const shopsData = snapshot.docs.map(doc => ({
         shopId: doc.id,
         ...doc.data()
@@ -33,7 +34,17 @@ const AdminPanel = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Calculate total revenue from all sales
+    const salesRef = collection(db, 'sales');
+    const unsubscribeSales = onSnapshot(salesRef, (snapshot) => {
+      const total = snapshot.docs.reduce((acc, doc) => acc + (doc.data().totalAmount || 0), 0);
+      setTotalRevenue(total);
+    });
+
+    return () => {
+      unsubscribeShops();
+      unsubscribeSales();
+    };
   }, []);
 
   const toggleShopStatus = async (shopId: string, currentStatus: string) => {
@@ -76,8 +87,8 @@ const AdminPanel = () => {
           </p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">Total Revenue (Est.)</p>
-          <p className="text-3xl font-bold text-blue-600 mt-1">0 ETB</p>
+          <p className="text-sm font-medium text-gray-500">Total Transaction Volume</p>
+          <p className="text-3xl font-bold text-blue-600 mt-1">{totalRevenue.toLocaleString()} ETB</p>
         </div>
       </div>
 

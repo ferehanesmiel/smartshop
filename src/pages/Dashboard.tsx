@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, limit, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -9,13 +9,16 @@ import {
   ShoppingBag,
   ArrowUpRight,
   ArrowDownRight,
-  Clock
+  Clock,
+  Store,
+  User,
+  Phone
 } from 'lucide-react';
 import { Sale, Product, Order } from '../types';
 import { motion } from 'motion/react';
 
 const Dashboard = () => {
-  const { shop } = useAuth();
+  const { shop, user } = useAuth();
   const [stats, setStats] = useState({
     todaySales: 0,
     totalProducts: 0,
@@ -24,16 +27,53 @@ const Dashboard = () => {
   });
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreatingShop, setIsCreatingShop] = useState(false);
+  const [newShopData, setNewShopData] = useState({
+    shopName: '',
+    ownerName: user?.displayName || '',
+    phone: '',
+  });
+
+  const handleCreateShop = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsCreatingShop(true);
+    try {
+      const slug = newShopData.shopName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const shopId = doc(collection(db, 'shops')).id;
+      await setDoc(doc(db, 'shops', shopId), {
+        shopId,
+        shopName: newShopData.shopName,
+        ownerName: newShopData.ownerName,
+        phone: newShopData.phone,
+        email: user.email,
+        plan: 'free',
+        createdAt: new Date().toISOString(),
+        ownerUid: user.uid,
+        slug,
+        status: 'active',
+      });
+      window.location.reload(); // Refresh to update AuthContext
+    } catch (err) {
+      console.error('Error creating shop:', err);
+    } finally {
+      setIsCreatingShop(false);
+    }
+  };
 
   useEffect(() => {
-    if (!shop) return;
+    if (!shop) {
+      setLoading(false);
+      return;
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // Listen for products (for total and low stock)
-    const productsRef = collection(db, 'shops', shop.shopId, 'products');
-    const unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
+    const productsRef = collection(db, 'products');
+    const qProducts = query(productsRef, where('shopId', '==', shop.shopId));
+    const unsubscribeProducts = onSnapshot(qProducts, (snapshot) => {
       const products = snapshot.docs.map(doc => doc.data() as Product);
       setStats(prev => ({
         ...prev,
@@ -43,18 +83,18 @@ const Dashboard = () => {
     });
 
     // Listen for today's sales
-    const salesRef = collection(db, 'shops', shop.shopId, 'sales');
-    const qSales = query(salesRef, where('createdAt', '>=', today.toISOString()), orderBy('createdAt', 'desc'));
+    const salesRef = collection(db, 'sales');
+    const qSales = query(salesRef, where('shopId', '==', shop.shopId), where('createdAt', '>=', today.toISOString()), orderBy('createdAt', 'desc'));
     const unsubscribeSales = onSnapshot(qSales, (snapshot) => {
       const sales = snapshot.docs.map(doc => doc.data() as Sale);
-      const total = sales.reduce((acc, sale) => acc + sale.total, 0);
+      const total = sales.reduce((acc, sale) => acc + sale.totalAmount, 0);
       setStats(prev => ({ ...prev, todaySales: total }));
       setRecentSales(sales.slice(0, 5));
     });
 
     // Listen for pending orders
-    const ordersRef = collection(db, 'shops', shop.shopId, 'orders');
-    const qOrders = query(ordersRef, where('status', '==', 'pending'));
+    const ordersRef = collection(db, 'orders');
+    const qOrders = query(ordersRef, where('shopId', '==', shop.shopId), where('status', '==', 'pending'));
     const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
       setStats(prev => ({ ...prev, pendingOrders: snapshot.size }));
     });
@@ -69,6 +109,77 @@ const Dashboard = () => {
   }, [shop]);
 
   if (loading) return <div className="animate-pulse">Loading dashboard...</div>;
+
+  if (!shop) {
+    return (
+      <div className="max-w-md mx-auto mt-12">
+        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-xl">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Store className="text-emerald-600 w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Your Shop</h1>
+            <p className="text-gray-500 mt-2">You're almost there! Just a few details to get started.</p>
+          </div>
+
+          <form onSubmit={handleCreateShop} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Shop Name</label>
+              <div className="relative">
+                <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  required
+                  value={newShopData.shopName}
+                  onChange={(e) => setNewShopData({ ...newShopData, shopName: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  placeholder="Abyssinia Boutique"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Owner Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  required
+                  value={newShopData.ownerName}
+                  onChange={(e) => setNewShopData({ ...newShopData, ownerName: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  placeholder="Abebe Bikila"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="tel"
+                  required
+                  value={newShopData.phone}
+                  onChange={(e) => setNewShopData({ ...newShopData, phone: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  placeholder="+251 911 223 344"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isCreatingShop}
+              className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
+            >
+              {isCreatingShop ? 'Creating Shop...' : 'Launch My Shop'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   const cards = [
     { 
@@ -169,7 +280,7 @@ const Dashboard = () => {
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {sale.items.length} items
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold text-gray-900">{sale.total.toLocaleString()} ETB</td>
+                      <td className="px-6 py-4 text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</td>
                       <td className="px-6 py-4 text-sm text-gray-500 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -34,8 +34,9 @@ const Products = () => {
   useEffect(() => {
     if (!shop) return;
 
-    const productsRef = collection(db, 'shops', shop.shopId, 'products');
-    const unsubscribe = onSnapshot(productsRef, (snapshot) => {
+    const productsRef = collection(db, 'products');
+    const q = query(productsRef, where('shopId', '==', shop.shopId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const productsData = snapshot.docs.map(doc => ({
         productId: doc.id,
         ...doc.data()
@@ -55,7 +56,7 @@ const Products = () => {
         price: product.price.toString(),
         quantity: product.quantity.toString(),
         category: product.category,
-        image: product.image || '',
+        image: product.imageUrl || '',
       });
     } else {
       setEditingProduct(null);
@@ -73,16 +74,16 @@ const Products = () => {
       price: parseFloat(formData.price),
       quantity: parseInt(formData.quantity),
       category: formData.category,
-      image: formData.image || `https://picsum.photos/seed/${formData.name}/200`,
+      imageUrl: formData.image || `https://picsum.photos/seed/${formData.name}/200`,
       shopId: shop.shopId,
       createdAt: new Date().toISOString(),
     };
 
     try {
       if (editingProduct) {
-        await updateDoc(doc(db, 'shops', shop.shopId, 'products', editingProduct.productId), productData);
+        await updateDoc(doc(db, 'products', editingProduct.productId), productData);
       } else {
-        await addDoc(collection(db, 'shops', shop.shopId, 'products'), productData);
+        await addDoc(collection(db, 'products'), productData);
       }
       setIsModalOpen(false);
     } catch (err) {
@@ -93,7 +94,7 @@ const Products = () => {
   const handleDelete = async (productId: string) => {
     if (!shop || !window.confirm('Are you sure you want to delete this product?')) return;
     try {
-      await deleteDoc(doc(db, 'shops', shop.shopId, 'products', productId));
+      await deleteDoc(doc(db, 'products', productId));
     } catch (err) {
       console.error('Error deleting product:', err);
     }
@@ -152,9 +153,9 @@ const Products = () => {
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group"
             >
               <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                {product.image ? (
+                {product.imageUrl ? (
                   <img 
-                    src={product.image} 
+                    src={product.imageUrl} 
                     alt={product.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     referrerPolicy="no-referrer"

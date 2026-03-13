@@ -42,8 +42,9 @@ const MiniStore = () => {
         setShop(shopData);
 
         // Fetch products
-        const productsRef = collection(db, 'shops', shopData.shopId, 'products');
-        const unsubscribe = onSnapshot(productsRef, (snapshot) => {
+        const productsRef = collection(db, 'products');
+        const qProducts = query(productsRef, where('shopId', '==', shopData.shopId));
+        const unsubscribe = onSnapshot(qProducts, (snapshot) => {
           const productsData = snapshot.docs.map(doc => ({
             productId: doc.id,
             ...doc.data()
@@ -101,12 +102,12 @@ const MiniStore = () => {
     if (!shop || cart.length === 0) return;
 
     try {
-      await addDoc(collection(db, 'shops', shop.shopId, 'orders'), {
+      await addDoc(collection(db, 'orders'), {
         shopId: shop.shopId,
         customerName: customerInfo.name,
         customerPhone: customerInfo.phone,
         products: cart,
-        total,
+        totalAmount: total,
         status: 'pending',
         createdAt: new Date().toISOString(),
       });
@@ -164,9 +165,9 @@ const MiniStore = () => {
           {products.map((product) => (
             <div key={product.productId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
               <div className="aspect-square bg-gray-100 relative">
-                {product.image && (
+                {product.imageUrl && (
                   <img 
-                    src={product.image} 
+                    src={product.imageUrl} 
                     alt={product.name} 
                     className="w-full h-full object-cover" 
                     referrerPolicy="no-referrer"
