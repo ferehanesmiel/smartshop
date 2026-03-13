@@ -9,7 +9,9 @@ import {
   ClipboardList, 
   LogOut,
   Store,
-  Settings
+  Settings,
+  BarChart3,
+  Receipt as ReceiptIcon
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { auth } from '../firebase';
@@ -32,10 +34,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'Sales', icon: History, path: '/dashboard/sales' },
     { name: 'Customers', icon: Users, path: '/dashboard/customers' },
     { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders' },
+    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts' },
+    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports' },
+    { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
   if (isAdmin) {
-    navItems.push({ name: 'Admin', icon: Settings, path: '/admin' });
+    navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin' });
   }
 
   return (

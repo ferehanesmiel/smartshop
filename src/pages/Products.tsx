@@ -29,6 +29,7 @@ const Products = () => {
     quantity: '',
     category: '',
     image: '',
+    description: '',
   });
 
   useEffect(() => {
@@ -57,10 +58,11 @@ const Products = () => {
         quantity: product.quantity.toString(),
         category: product.category,
         image: product.imageUrl || '',
+        description: product.description || '',
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', price: '', quantity: '', category: '', image: '' });
+      setFormData({ name: '', price: '', quantity: '', category: '', image: '', description: '' });
     }
     setIsModalOpen(true);
   };
@@ -75,6 +77,7 @@ const Products = () => {
       quantity: parseInt(formData.quantity),
       category: formData.category,
       imageUrl: formData.image || `https://picsum.photos/seed/${formData.name}/200`,
+      description: formData.description,
       shopId: shop.shopId,
       createdAt: new Date().toISOString(),
     };
@@ -267,6 +270,15 @@ const Products = () => {
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                       placeholder="e.g. Clothing, Food, Electronics"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none min-h-[80px]"
+                      placeholder="Product details, features, etc."
                     />
                   </div>
                   <div className="col-span-2">

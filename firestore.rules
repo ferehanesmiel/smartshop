@@ -65,6 +65,13 @@ service cloud.firestore {
       allow delete: if isShopOwner(resource.data.shopId);
     }
 
+    match /receipts/{receiptId} {
+      allow read: if isShopOwner(resource.data.shopId);
+      allow create: if isShopOwner(request.resource.data.shopId);
+      allow update: if isShopOwner(resource.data.shopId);
+      allow delete: if isAdmin();
+    }
+
     match /subscriptions/{subscriptionId} {
       allow read: if isShopOwner(resource.data.shopId) || isAdmin();
       allow write: if isAdmin();

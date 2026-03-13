@@ -15,6 +15,9 @@ import POS from './pages/POS';
 import Sales from './pages/Sales';
 import Customers from './pages/Customers';
 import Orders from './pages/Orders';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
+import Receipts from './pages/Receipts';
 import MiniStore from './pages/MiniStore';
 import AdminPanel from './pages/AdminPanel';
 import Layout from './components/Layout';
@@ -82,6 +85,27 @@ export default function App() {
             <ProtectedRoute>
               <Layout>
                 <Orders />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/reports" element={
+            <ProtectedRoute>
+              <Layout>
+                <Reports />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/settings" element={
+            <ProtectedRoute>
+              <Layout>
+                <Settings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/receipts" element={
+            <ProtectedRoute>
+              <Layout>
+                <Receipts />
               </Layout>
             </ProtectedRoute>
           } />

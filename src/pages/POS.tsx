@@ -14,8 +14,9 @@ import {
   CheckCircle2,
   X
 } from 'lucide-react';
-import { Product, SaleItem, Sale } from '../types';
+import { Product, SaleItem, Sale, Receipt as ReceiptType } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { sendSMS } from '../services/smsService';
 
 const POS = () => {
   const { shop } = useAuth();
@@ -124,7 +125,7 @@ const POS = () => {
         if (customerSnap.exists()) {
           await updateDoc(customerRef, {
             purchaseCount: increment(1),
-            loyaltyPoints: increment(Math.floor(total / 100)), // 1 point per 100 ETB
+            loyaltyPoints: increment(1), // 1 purchase = 1 loyalty point
             lastPurchaseDate: new Date().toISOString()
           });
         } else {
@@ -134,13 +135,36 @@ const POS = () => {
             name: customerName || 'Valued Customer',
             phone: customerPhone,
             purchaseCount: 1,
-            loyaltyPoints: Math.floor(total / 100),
+            loyaltyPoints: 1,
             lastPurchaseDate: new Date().toISOString()
           });
         }
       }
 
       setLastSale({ saleId, ...saleData } as Sale);
+
+      // 4. Create Digital Receipt
+      const receiptData: Omit<ReceiptType, 'receiptId'> = {
+        shopId: shop.shopId,
+        saleId: saleId,
+        customerPhone: customerPhone || undefined,
+        items: saleData.items,
+        totalAmount: total,
+        paymentMethod: saleData.paymentMethod,
+        createdAt: saleData.createdAt,
+        shopName: shop.shopName
+      };
+      await addDoc(collection(db, 'receipts'), receiptData);
+
+      // 5. Send SMS Notification
+      if (customerPhone) {
+        sendSMS({
+          to: customerPhone,
+          message: `Thank you for shopping at ${shop.shopName}. Your purchase total is ${total} ETB. Visit again!`,
+          shopName: shop.shopName
+        });
+      }
+
       setIsReceiptOpen(true);
       setCart([]);
       setCustomerPhone('');

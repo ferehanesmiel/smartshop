@@ -160,6 +160,24 @@ const Orders = () => {
                   </div>
                 </div>
 
+                {selectedOrder.deliveryAddress && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Delivery Address</p>
+                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      {selectedOrder.deliveryAddress}
+                    </p>
+                  </div>
+                )}
+
+                {selectedOrder.note && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Customer Note</p>
+                    <p className="text-sm text-gray-600 italic bg-amber-50 p-3 rounded-xl border border-amber-100">
+                      "{selectedOrder.note}"
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Items</p>
                   <div className="space-y-3">

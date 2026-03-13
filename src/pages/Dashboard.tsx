@@ -12,10 +12,14 @@ import {
   Clock,
   Store,
   User,
-  Phone
+  Phone,
+  Plus
 } from 'lucide-react';
 import { Sale, Product, Order } from '../types';
 import { motion } from 'motion/react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { cn } from '../lib/utils';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { shop, user } = useAuth();
@@ -107,6 +111,28 @@ const Dashboard = () => {
       unsubscribeOrders();
     };
   }, [shop]);
+
+  const getRevenueData = () => {
+    const data: { [key: string]: number } = {};
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toLocaleDateString();
+    }).reverse();
+
+    last7Days.forEach(date => data[date] = 0);
+
+    // We only have today's sales in the current state, but in a real app we'd fetch more.
+    // For now, let's use the recentSales to populate some data if possible.
+    recentSales.forEach(sale => {
+      const date = new Date(sale.createdAt).toLocaleDateString();
+      if (data[date] !== undefined) {
+        data[date] += sale.totalAmount;
+      }
+    });
+
+    return Object.entries(data).map(([name, amount]) => ({ name, amount }));
+  };
 
   if (loading) return <div className="animate-pulse">Loading dashboard...</div>;
 
@@ -216,10 +242,21 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">Welcome back to {shop?.shopName}</p>
+    <div className="space-y-8 pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500">Welcome back to {shop?.shopName}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link 
+            to="/dashboard/pos"
+            className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200"
+          >
+            <Plus className="w-5 h-5" />
+            New Sale
+          </Link>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -230,20 +267,23 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"
+            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 ${card.bg} rounded-xl flex items-center justify-center`}>
+            <div className="flex justify-between items-start mb-4">
+              <div className={`w-12 h-12 ${card.bg} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                 <card.icon className={`${card.color} w-6 h-6`} />
               </div>
               {card.trend && (
-                <div className={`flex items-center text-xs font-medium ${card.trendUp ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {card.trendUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                <div className={cn(
+                  "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg",
+                  card.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                )}>
+                  {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                   {card.trend}
                 </div>
               )}
             </div>
-            <p className="text-sm font-medium text-gray-500">{card.title}</p>
+            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{card.title}</p>
             <p className={`text-2xl font-bold mt-1 ${card.alert ? 'text-amber-600' : 'text-gray-900'}`}>
               {card.value}
             </p>
@@ -252,69 +292,69 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Sales */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="font-bold text-gray-900">Recent Sales</h2>
-            <button className="text-sm text-emerald-600 font-medium hover:underline">View All</button>
+        {/* Sales Chart */}
+        <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Revenue Overview</h3>
+              <p className="text-sm text-gray-500">Sales performance for the last 7 days</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl">
+              <TrendingUp className="w-4 h-4" />
+              Live Updates
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-50 text-xs uppercase text-gray-500 font-bold">
-                  <th className="px-6 py-4">Sale ID</th>
-                  <th className="px-6 py-4">Items</th>
-                  <th className="px-6 py-4">Total</th>
-                  <th className="px-6 py-4">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {recentSales.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-10 text-center text-gray-500">No sales today yet</td>
-                  </tr>
-                ) : (
-                  recentSales.map((sale) => (
-                    <tr key={sale.saleId} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">#{sale.saleId.slice(0, 6)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {sale.items.length} items
-                      </td>
-                      <td className="px-6 py-4 text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</td>
-                      <td className="px-6 py-4 text-sm text-gray-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={getRevenueData()}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                />
+                <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="space-y-6">
-          <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200">
-            <h3 className="font-bold text-lg mb-2">Need Help?</h3>
-            <p className="text-emerald-100 text-sm mb-4">Check out our guide on how to manage your inventory and boost sales.</p>
-            <button className="bg-white text-emerald-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-50 transition-colors">
-              View Guide
-            </button>
+        {/* Recent Sales */}
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-bold text-gray-900">Recent Sales</h3>
+            <Link to="/dashboard/sales" className="text-sm font-bold text-emerald-600 hover:underline">View All</Link>
           </div>
-
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-bold text-gray-900 mb-4">Store Link</h3>
-            <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between gap-2">
-              <p className="text-xs text-gray-500 truncate">smartshop.et/shop/{shop?.slug}</p>
-              <button 
-                onClick={() => navigator.clipboard.writeText(`https://smartshop.et/shop/${shop?.slug}`)}
-                className="text-emerald-600 text-xs font-bold hover:underline flex-shrink-0"
-              >
-                Copy
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-3">Share this link with your customers to receive online orders.</p>
+          <div className="space-y-6">
+            {recentSales.map((sale) => (
+              <div key={sale.saleId} className="flex items-center justify-between group cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                    <Clock className="w-6 h-6 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">#{sale.saleId.slice(0, 8)}</p>
+                    <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</p>
+                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{sale.paymentMethod}</p>
+                </div>
+              </div>
+            ))}
+            {recentSales.length === 0 && (
+              <div className="text-center py-12 text-gray-400">
+                <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p>No sales today yet</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

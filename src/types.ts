@@ -21,6 +21,7 @@ export interface Product {
   category: string;
   barcode?: string;
   imageUrl?: string;
+  description?: string;
   createdAt: string;
 }
 
@@ -63,6 +64,8 @@ export interface Order {
   shopId: string;
   customerPhone: string;
   customerName?: string;
+  deliveryAddress?: string;
+  note?: string;
   products: OrderItem[];
   totalAmount: number;
   status: 'pending' | 'accepted' | 'completed' | 'rejected';
@@ -84,4 +87,16 @@ export interface Admin {
   email: string;
   role: string;
   createdAt: string;
+}
+
+export interface Receipt {
+  receiptId: string;
+  shopId: string;
+  saleId: string;
+  customerPhone?: string;
+  items: SaleItem[];
+  totalAmount: number;
+  paymentMethod: 'cash' | 'mobile' | 'card';
+  createdAt: string;
+  shopName: string;
 }
