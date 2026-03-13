@@ -11,8 +11,7 @@ service cloud.firestore {
 
     function isShopOwner(shopId) {
       return isAuthenticated() && (
-        get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid ||
-        isAdmin()
+        isAdmin() || (shopId != null && get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid)
       );
     }
 

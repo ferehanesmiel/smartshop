@@ -100,12 +100,13 @@
       "properties": {
         "subscriptionId": { "type": "string" },
         "shopId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["basic", "pro", "premium"] },
+        "planName": { "type": "string", "enum": ["basic", "pro", "premium"] },
         "startDate": { "type": "string", "format": "date-time" },
         "endDate": { "type": "string", "format": "date-time" },
-        "paymentStatus": { "type": "string", "enum": ["paid", "unpaid"] }
+        "paymentStatus": { "type": "string", "enum": ["paid", "unpaid"] },
+        "subscriptionStatus": { "type": "string", "enum": ["active", "expired"] }
       },
-      "required": ["subscriptionId", "shopId", "plan", "startDate", "endDate", "paymentStatus"]
+      "required": ["subscriptionId", "shopId", "planName", "startDate", "endDate", "paymentStatus", "subscriptionStatus"]
     },
     "Receipt": {
       "title": "Receipt",

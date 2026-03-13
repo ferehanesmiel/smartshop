@@ -14,6 +14,7 @@ import {
   Receipt as ReceiptIcon
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { auth } from '../firebase';
 import { cn } from '../lib/utils';
 
@@ -21,26 +22,29 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { shop, isAdmin } = useAuth();
+  const { isFeatureAllowed } = useSubscription();
 
   const handleLogout = async () => {
     await auth.signOut();
     navigate('/login');
   };
 
-  const navItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { name: 'POS', icon: ShoppingCart, path: '/dashboard/pos' },
-    { name: 'Products', icon: Package, path: '/dashboard/products' },
-    { name: 'Sales', icon: History, path: '/dashboard/sales' },
-    { name: 'Customers', icon: Users, path: '/dashboard/customers' },
-    { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders' },
-    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts' },
-    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports' },
-    { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+  const allNavItems = [
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', feature: 'sales-tracking' },
+    { name: 'POS', icon: ShoppingCart, path: '/dashboard/pos', feature: 'sales-tracking' },
+    { name: 'Products', icon: Package, path: '/dashboard/products', feature: 'inventory' },
+    { name: 'Sales', icon: History, path: '/dashboard/sales', feature: 'sales-tracking' },
+    { name: 'Customers', icon: Users, path: '/dashboard/customers', feature: 'customers' },
+    { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders', feature: 'orders' },
+    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts', feature: 'receipts' },
+    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports', feature: 'advanced-reports' },
+    { name: 'Settings', icon: Settings, path: '/dashboard/settings', feature: 'inventory' },
   ];
 
+  const navItems = allNavItems.filter(item => !item.feature || isFeatureAllowed(item.feature));
+
   if (isAdmin) {
-    navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin' });
+    navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin', feature: '' });
   }
 
   return (

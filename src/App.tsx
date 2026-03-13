@@ -6,6 +6,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
+import { SubscriptionProvider } from './SubscriptionContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -19,8 +20,10 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Receipts from './pages/Receipts';
 import MiniStore from './pages/MiniStore';
-import AdminPanel from './pages/AdminPanel';
 import Layout from './components/Layout';
+import AdminLayout from './components/AdminLayout';
+import AdminPanel from './pages/AdminPanel';
+import AdminShops from './pages/AdminShops';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -39,9 +42,10 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
+      <SubscriptionProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/shop/:slug" element={<MiniStore />} />
@@ -112,14 +116,16 @@ export default function App() {
           
           <Route path="/admin" element={
             <AdminRoute>
-              <Layout>
-                <AdminPanel />
-              </Layout>
+              <AdminLayout />
             </AdminRoute>
-          } />
+          }>
+            <Route index element={<AdminPanel />} />
+            <Route path="shops" element={<AdminShops />} />
+          </Route>
         </Routes>
       </Router>
-    </AuthProvider>
+    </SubscriptionProvider>
+  </AuthProvider>
   );
 }
 

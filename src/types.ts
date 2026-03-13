@@ -75,10 +75,11 @@ export interface Order {
 export interface Subscription {
   subscriptionId: string;
   shopId: string;
-  plan: 'basic' | 'pro' | 'premium';
+  planName: 'basic' | 'pro' | 'premium';
   startDate: string;
   endDate: string;
   paymentStatus: 'paid' | 'unpaid';
+  subscriptionStatus: 'active' | 'expired';
 }
 
 export interface Admin {
