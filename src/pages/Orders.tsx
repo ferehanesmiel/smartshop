@@ -89,7 +89,7 @@ const Orders = () => {
                   <span className={cn("text-[10px] font-bold uppercase px-2 py-1 rounded-md", statusColors[order.status])}>
                     {order.status}
                   </span>
-                  <span className="text-xs text-gray-400">#{order.orderId.slice(0, 8)}</span>
+                  <span className="text-xs text-gray-400">#{order?.orderId?.slice(0, 8)}</span>
                 </div>
                 <span className="text-xs text-gray-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" />

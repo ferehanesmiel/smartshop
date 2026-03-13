@@ -10,10 +10,13 @@ import {
   MoreVertical,
   Package,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Camera
 } from 'lucide-react';
 import { Product } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import QRScanner from '../components/QRScanner';
+import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 
 const Products = () => {
   const { shop } = useAuth();
@@ -22,6 +25,16 @@ const Products = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  const handleScan = (barcode: string) => {
+    // For products, maybe we can use the barcode as a product code?
+    // Let's just set the product name or description for now.
+    setFormData(prev => ({ ...prev, name: barcode }));
+    setIsScannerOpen(false);
+  };
+
+  useBarcodeScanner(handleScan);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -126,7 +139,7 @@ const Products = () => {
 
       {/* Search and Filters */}
       <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:row items-center gap-4">
-        <div className="relative flex-1 w-full">
+        <div className="relative flex-1 w-full flex gap-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
@@ -135,8 +148,16 @@ const Products = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
           />
+          <button
+            onClick={() => setIsScannerOpen(true)}
+            className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl hover:bg-gray-200 transition-all"
+          >
+            <Camera className="w-5 h-5" />
+          </button>
         </div>
       </div>
+      
+      {isScannerOpen && <QRScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
 
       {/* Products Grid */}
       {loading ? (

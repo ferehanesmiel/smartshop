@@ -114,7 +114,7 @@ const Receipts = () => {
                 filteredReceipts.map((receipt) => (
                   <tr key={receipt.receiptId} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-6 py-4">
-                      <span className="font-mono text-xs font-bold text-emerald-600">#{receipt.receiptId.slice(0, 8)}</span>
+                      <span className="font-mono text-xs font-bold text-emerald-600">#{receipt?.receiptId?.slice(0, 8)}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">{new Date(receipt.createdAt).toLocaleDateString()}</div>

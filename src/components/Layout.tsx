@@ -126,7 +126,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
       {/* Mobile Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-2 z-10">
-        {navItems.slice(0, 5).map((item) => (
+        {(navItems || []).slice(0, 5).map((item) => (
           <Link
             key={item.path}
             to={item.path}

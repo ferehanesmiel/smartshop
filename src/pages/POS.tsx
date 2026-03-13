@@ -12,11 +12,14 @@ import {
   Phone,
   Receipt,
   CheckCircle2,
-  X
+  X,
+  Camera
 } from 'lucide-react';
 import { Product, SaleItem, Sale, Receipt as ReceiptType } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { sendSMS } from '../services/smsService';
+import QRScanner from '../components/QRScanner';
+import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 
 const POS = () => {
   const { shop } = useAuth();
@@ -28,6 +31,17 @@ const POS = () => {
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  const handleScan = (barcode: string) => {
+    const product = products.find(p => p.productId === barcode || p.name.toLowerCase() === barcode.toLowerCase());
+    if (product) {
+      addToCart(product);
+      setIsScannerOpen(false);
+    }
+  };
+
+  useBarcodeScanner(handleScan);
 
   useEffect(() => {
     if (!shop) return;
@@ -181,7 +195,7 @@ const POS = () => {
 
   const sendReceiptWhatsApp = () => {
     if (!lastSale || !customerPhone) return;
-    const message = `Receipt from ${shop?.shopName}\nSale ID: ${lastSale.saleId.slice(0, 6)}\nTotal: ${lastSale.totalAmount} ETB\nThank you for shopping with us!`;
+    const message = `Receipt from ${shop?.shopName}\nSale ID: ${lastSale?.saleId?.slice(0, 6)}\nTotal: ${lastSale?.totalAmount} ETB\nThank you for shopping with us!`;
     window.open(`https://wa.me/${customerPhone.replace(/\s+/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -191,7 +205,7 @@ const POS = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Point of Sale</h1>
-          <div className="mt-4 relative">
+          <div className="mt-4 relative flex gap-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
@@ -200,8 +214,16 @@ const POS = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
             />
+            <button
+              onClick={() => setIsScannerOpen(true)}
+              className="bg-gray-100 text-gray-600 px-4 py-3 rounded-2xl hover:bg-gray-200 transition-all"
+            >
+              <Camera className="w-5 h-5" />
+            </button>
           </div>
         </div>
+        
+        {isScannerOpen && <QRScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
 
         <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
@@ -353,7 +375,7 @@ const POS = () => {
                 <div className="mt-8 p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-300 text-left">
                   <div className="flex justify-between text-xs text-gray-500 mb-4">
                     <span>{new Date(lastSale.createdAt).toLocaleString()}</span>
-                    <span>#{lastSale.saleId.slice(0, 6)}</span>
+                    <span>#{lastSale?.saleId?.slice(0, 6)}</span>
                   </div>
                   <div className="space-y-2 mb-4">
                     {lastSale.items.map((item, i) => (

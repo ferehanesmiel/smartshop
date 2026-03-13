@@ -1,3 +1,69 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: shops
+// Document ID: shopId
+// Fields:
+//   - shopId: string (required)
+//   - shopName: string (required)
+//   - ownerName: string (required)
+//   - phone: string (required)
+//   - email: string (required)
+//   - plan: string (required)
+//   - createdAt: string (required)
+//   - ownerUid: string (required)
+//   - slug: string (required)
+//   - status: string (required)
+//
+// Collection: products
+// Document ID: productId
+// Fields:
+//   - shopId: string (required)
+//   - quantity: number (required)
+//
+// Collection: sales
+// Document ID: saleId
+// Fields:
+//   - shopId: string (required)
+//   - totalAmount: number (required)
+//   - createdAt: string (required)
+//   - paymentMethod: string (required)
+//
+// Collection: customers
+// Document ID: customerId
+// Fields:
+//   - shopId: string (required)
+//
+// Collection: orders
+// Document ID: orderId
+// Fields:
+//   - shopId: string (required)
+//   - status: string (required)
+//
+// Collection: receipts
+// Document ID: receiptId
+// Fields:
+//   - shopId: string (required)
+//
+// Collection: subscriptions
+// Document ID: subscriptionId
+// Fields:
+//   - shopId: string (required)
+//   - planName: string (required)
+//   - subscriptionStatus: string (required)
+//
+// Collection: admins
+// Document ID: adminId
+// Fields:
+//   - (none explicitly defined)
+//
+// Collection: siteSettings
+// Document ID: (any)
+// Fields:
+//   - (none explicitly defined)
+//
+// ===============================================================
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -72,7 +138,8 @@ service cloud.firestore {
     }
 
     match /subscriptions/{subscriptionId} {
-      allow read: if isShopOwner(resource.data.shopId) || isAdmin();
+      allow get: if isShopOwner(resource.data.shopId) || isAdmin();
+      allow list: if isAdmin() || isAuthenticated();
       allow write: if isAdmin();
     }
 

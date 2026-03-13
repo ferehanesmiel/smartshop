@@ -43,9 +43,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [shop]);
 
   const isFeatureAllowed = (feature: string): boolean => {
-    if (!subscription || subscription.subscriptionStatus === 'expired') return false;
-    
-    const plan = subscription.planName;
+    const plan = subscription?.planName || 'basic';
+    if (subscription?.subscriptionStatus === 'expired') return false;
     
     const features: Record<string, string[]> = {
       basic: ['inventory', 'sales-tracking'],

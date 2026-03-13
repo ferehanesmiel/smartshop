@@ -50,7 +50,7 @@ const AdminOrders = () => {
               ) : (
                 orders.map((order) => (
                   <tr key={order.orderId} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">#{order.orderId.slice(0, 8)}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">#{order?.orderId?.slice(0, 8)}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{order.customerName || 'N/A'}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{order.totalAmount.toLocaleString()} ETB</td>
                     <td className="px-6 py-4 text-sm font-bold uppercase text-emerald-600">{order.status}</td>

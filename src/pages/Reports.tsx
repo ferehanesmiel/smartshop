@@ -282,14 +282,14 @@ const Reports = () => {
             Recent Transactions
           </h3>
           <div className="space-y-4">
-            {sales.slice(0, 6).map((sale) => (
+            {(sales || []).slice(0, 6).map((sale) => (
               <div key={sale.saleId} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-500">
                     {sale.paymentMethod[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">#{sale.saleId.slice(0, 8)}</p>
+                    <p className="text-sm font-bold text-gray-900">#{sale?.saleId?.slice(0, 8)}</p>
                     <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>

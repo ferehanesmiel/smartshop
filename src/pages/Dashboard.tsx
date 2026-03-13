@@ -96,7 +96,7 @@ const Dashboard = () => {
       const sales = snapshot.docs.map(doc => doc.data() as Sale);
       const total = sales.reduce((acc, sale) => acc + sale.totalAmount, 0);
       setStats(prev => ({ ...prev, todaySales: total }));
-      setRecentSales(sales.slice(0, 5));
+      setRecentSales((sales || []).slice(0, 5));
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'sales');
     });
@@ -266,6 +266,25 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {(!shop?.plan || shop.plan === 'free') && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-3xl p-6 text-white flex items-center justify-between shadow-lg"
+        >
+          <div>
+            <h3 className="text-lg font-bold">Unlock more features</h3>
+            <p className="text-emerald-100 text-sm">Upgrade to Pro or Premium to get advanced analytics and more.</p>
+          </div>
+          <Link 
+            to="/dashboard/settings"
+            className="bg-white text-emerald-700 px-6 py-3 rounded-2xl font-bold hover:bg-emerald-50 transition-all"
+          >
+            Upgrade Plan
+          </Link>
+        </motion.div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card, i) => (
@@ -346,7 +365,7 @@ const Dashboard = () => {
                     <Clock className="w-6 h-6 text-gray-400 group-hover:text-emerald-600 transition-colors" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">#{sale.saleId.slice(0, 8)}</p>
+                    <p className="text-sm font-bold text-gray-900">#{sale?.saleId?.slice(0, 8)}</p>
                     <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
