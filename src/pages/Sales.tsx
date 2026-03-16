@@ -79,9 +79,10 @@ const Sales = () => {
         </div>
       </div>
 
-      {/* Sales Table */}
+      {/* Sales Table / Cards */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-50 text-xs uppercase text-gray-500 font-bold">
@@ -164,6 +165,44 @@ const Sales = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {loading ? (
+            [1, 2, 3].map(i => (
+              <div key={i} className="p-4 animate-pulse space-y-3">
+                <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+              </div>
+            ))
+          ) : filteredSales.length === 0 ? (
+            <div className="p-10 text-center text-gray-500">No transactions found</div>
+          ) : (
+            filteredSales.map((sale) => (
+              <div key={sale.saleId} className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                      <Receipt className="text-emerald-600 w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">#{sale?.saleId?.slice(0, 8)}</p>
+                      <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-emerald-600">{sale.totalAmount.toLocaleString()} ETB</p>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3 h-3" />
+                    {sale.customerPhone || 'Guest'}
+                  </div>
+                  <div>{sale.items.length} items</div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

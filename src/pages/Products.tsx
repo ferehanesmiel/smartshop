@@ -11,12 +11,15 @@ import {
   Package,
   X,
   Image as ImageIcon,
-  Camera
+  QrCode,
+  AlertCircle
 } from 'lucide-react';
 import { Product } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import QRScanner from '../components/QRScanner';
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
+import { PLANS, PlanType } from '../constants';
+import { Link } from 'react-router-dom';
 
 const Products = () => {
   const { shop } = useAuth();
@@ -26,11 +29,25 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
+
+  const currentPlan = PLANS[(shop?.plan as PlanType) || 'basic'];
+  const productLimit = currentPlan.limits.products;
+
+  useEffect(() => {
+    if (products.length >= productLimit) {
+      setLimitReached(true);
+    } else {
+      setLimitReached(false);
+    }
+  }, [products.length, productLimit]);
 
   const handleScan = (barcode: string) => {
-    // For products, maybe we can use the barcode as a product code?
-    // Let's just set the product name or description for now.
-    setFormData(prev => ({ ...prev, name: barcode }));
+    if (isModalOpen) {
+      setFormData(prev => ({ ...prev, barcode }));
+    } else {
+      setSearchTerm(barcode);
+    }
     setIsScannerOpen(false);
   };
 
@@ -43,6 +60,7 @@ const Products = () => {
     category: '',
     image: '',
     description: '',
+    barcode: '',
   });
 
   useEffect(() => {
@@ -63,6 +81,11 @@ const Products = () => {
   }, [shop]);
 
   const handleOpenModal = (product?: Product) => {
+    if (!product && limitReached) {
+      alert(`You have reached the product limit (${productLimit}) for your ${currentPlan.name} plan. Please upgrade to add more products.`);
+      return;
+    }
+
     if (product) {
       setEditingProduct(product);
       setFormData({
@@ -72,10 +95,11 @@ const Products = () => {
         category: product.category,
         image: product.imageUrl || '',
         description: product.description || '',
+        barcode: product.barcode || '',
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', price: '', quantity: '', category: '', image: '', description: '' });
+      setFormData({ name: '', price: '', quantity: '', category: '', image: '', description: '', barcode: '' });
     }
     setIsModalOpen(true);
   };
@@ -91,7 +115,10 @@ const Products = () => {
       category: formData.category,
       imageUrl: formData.image || `https://picsum.photos/seed/${formData.name}/200`,
       description: formData.description,
+      barcode: formData.barcode,
       shopId: shop.shopId,
+      shopName: shop.shopName,
+      slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
       createdAt: new Date().toISOString(),
     };
 
@@ -130,12 +157,32 @@ const Products = () => {
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-200"
+          disabled={limitReached}
+          className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${
+            limitReached 
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+              : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
+          }`}
         >
           <Plus className="w-5 h-5" />
           Add Product
         </button>
       </div>
+
+      {limitReached && (
+        <div className="bg-orange-50 border border-orange-200 text-orange-800 p-4 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-bold text-orange-900">Product Limit Reached</h3>
+            <p className="text-sm mt-1">
+              You have reached the maximum number of products ({productLimit}) allowed on the {currentPlan.name} plan.
+            </p>
+            <Link to="/dashboard/settings" className="text-orange-700 font-bold text-sm mt-2 inline-block hover:underline">
+              Upgrade your plan &rarr;
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:row items-center gap-4">
@@ -150,9 +197,10 @@ const Products = () => {
           />
           <button
             onClick={() => setIsScannerOpen(true)}
-            className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl hover:bg-gray-200 transition-all"
+            className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 flex items-center gap-2"
           >
-            <Camera className="w-5 h-5" />
+            <QrCode className="w-5 h-5" />
+            <span className="text-sm font-bold">Scan</span>
           </button>
         </div>
       </div>
@@ -292,6 +340,25 @@ const Products = () => {
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                       placeholder="e.g. Clothing, Food, Electronics"
                     />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Barcode / QR Code (Optional)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.barcode}
+                        onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                        className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                        placeholder="Scan or enter code"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsScannerOpen(true)}
+                        className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100"
+                      >
+                        <QrCode className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>

@@ -1,5 +1,9 @@
 {
   "name": "SmartShop Ethiopia",
-  "description": "A full SaaS shop management system with digital receipts and mini online stores for small businesses in Ethiopia.",
-  "requestFramePermissions": []
+  "description": "Modern Cloud POS and Shop Management System for Ethiopian Retail Stores.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
 }

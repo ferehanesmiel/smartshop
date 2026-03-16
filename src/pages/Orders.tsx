@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { 
   ClipboardList, 
   Clock, 
@@ -10,20 +11,28 @@ import {
   Phone,
   User,
   Package,
-  ChevronRight
+  ChevronRight,
+  Lock
 } from 'lucide-react';
 import { Order } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { Link } from 'react-router-dom';
 
 const Orders = () => {
   const { shop } = useAuth();
+  const { isFeatureAllowed } = useSubscription();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
+  const hasAccess = isFeatureAllowed('orders');
+
   useEffect(() => {
-    if (!shop) return;
+    if (!shop || !hasAccess) {
+      setLoading(false);
+      return;
+    }
 
     const ordersRef = collection(db, 'orders');
     const q = query(ordersRef, where('shopId', '==', shop.shopId), orderBy('createdAt', 'desc'));
@@ -38,7 +47,27 @@ const Orders = () => {
     });
 
     return () => unsubscribe();
-  }, [shop]);
+  }, [shop, hasAccess]);
+
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
+          <Lock className="w-10 h-10 text-[#ff6600]" />
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Purchase Orders</h2>
+        <p className="text-gray-500 max-w-md mb-8">
+          Manage supplier orders, track purchases, and streamline your supply chain with the Pro plan.
+        </p>
+        <Link 
+          to="/dashboard/settings" 
+          className="bg-[#ff6600] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#e65c00] transition-all shadow-lg shadow-orange-200"
+        >
+          Upgrade to Pro
+        </Link>
+      </div>
+    );
+  }
 
   const updateStatus = async (orderId: string, status: Order['status']) => {
     if (!shop) return;
@@ -52,16 +81,17 @@ const Orders = () => {
 
   const statusColors = {
     pending: "bg-amber-100 text-amber-700",
-    accepted: "bg-blue-100 text-blue-700",
-    completed: "bg-emerald-100 text-emerald-700",
-    rejected: "bg-red-100 text-red-700",
+    confirmed: "bg-blue-100 text-blue-700",
+    shipped: "bg-purple-100 text-purple-700",
+    delivered: "bg-emerald-100 text-emerald-700",
+    cancelled: "bg-red-100 text-red-700",
   };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Online Orders</h1>
-        <p className="text-gray-500">Manage orders from your mini store</p>
+        <p className="text-gray-500">Manage orders from your marketplace store</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -93,7 +123,7 @@ const Orders = () => {
                 </div>
                 <span className="text-xs text-gray-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {new Date(order.createdAt).toLocaleDateString()}
+                  {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : new Date(order.createdAt).toLocaleDateString()}
                 </span>
               </div>
 
@@ -112,7 +142,7 @@ const Orders = () => {
 
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <p className="text-sm text-gray-600">
-                  <span className="font-bold">{order.products.length}</span> items
+                  <span className="font-bold">{(order.items || order.products)?.length || 0}</span> items
                 </p>
                 <p className="text-lg font-bold text-gray-900">{order.totalAmount.toLocaleString()} ETB</p>
               </div>
@@ -160,32 +190,37 @@ const Orders = () => {
                   </div>
                 </div>
 
-                {selectedOrder.deliveryAddress && (
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Delivery Address</p>
-                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                      {selectedOrder.deliveryAddress}
-                    </p>
-                  </div>
-                )}
-
-                {selectedOrder.note && (
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Customer Note</p>
-                    <p className="text-sm text-gray-600 italic bg-amber-50 p-3 rounded-xl border border-amber-100">
-                      "{selectedOrder.note}"
-                    </p>
-                  </div>
-                )}
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedOrder.customerAddress && (
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Delivery Address</p>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 h-full">
+                        {selectedOrder.customerAddress}
+                      </p>
+                    </div>
+                  )}
+                  {selectedOrder.paymentMethod && (
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Payment Method</p>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 h-full uppercase font-bold">
+                        {selectedOrder.paymentMethod.replace('_', ' ')}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 <div>
                   <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Items</p>
                   <div className="space-y-3">
-                    {selectedOrder.products.map((item, i) => (
+                    {(selectedOrder.items || selectedOrder.products)?.map((item, i) => (
                       <div key={item.productId} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-                            <Package className="w-4 h-4 text-gray-400" />
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded" />
+                            ) : (
+                              <Package className="w-4 h-4 text-gray-400" />
+                            )}
                           </div>
                           <span>{item.name} <span className="text-gray-400">x{item.quantity}</span></span>
                         </div>
@@ -204,25 +239,33 @@ const Orders = () => {
                   {selectedOrder.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => updateStatus(selectedOrder.orderId, 'rejected')}
+                        onClick={() => updateStatus(selectedOrder.orderId, 'cancelled')}
                         className="px-4 py-3 border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 transition-all"
                       >
-                        Reject Order
+                        Cancel Order
                       </button>
                       <button
-                        onClick={() => updateStatus(selectedOrder.orderId, 'accepted')}
+                        onClick={() => updateStatus(selectedOrder.orderId, 'confirmed')}
                         className="px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                       >
-                        Accept Order
+                        Confirm Order
                       </button>
                     </>
                   )}
-                  {selectedOrder.status === 'accepted' && (
+                  {selectedOrder.status === 'confirmed' && (
                     <button
-                      onClick={() => updateStatus(selectedOrder.orderId, 'completed')}
+                      onClick={() => updateStatus(selectedOrder.orderId, 'shipped')}
+                      className="col-span-2 px-4 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200"
+                    >
+                      Mark as Shipped
+                    </button>
+                  )}
+                  {selectedOrder.status === 'shipped' && (
+                    <button
+                      onClick={() => updateStatus(selectedOrder.orderId, 'delivered')}
                       className="col-span-2 px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                     >
-                      Mark as Completed
+                      Mark as Delivered
                     </button>
                   )}
                 </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { Sale, Product } from '../types';
 import { 
   BarChart, 
@@ -23,21 +24,29 @@ import {
   Package, 
   ShoppingCart, 
   Calendar,
-  Filter
+  Filter,
+  Lock
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 const Reports = () => {
   const { shop } = useAuth();
+  const { isFeatureAllowed } = useSubscription();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
 
+  const hasAccess = isFeatureAllowed('advanced-reports');
+
   useEffect(() => {
-    if (!shop) return;
+    if (!shop || !hasAccess) {
+      setLoading(false);
+      return;
+    }
 
     const salesRef = collection(db, 'sales');
     const qSales = query(salesRef, where('shopId', '==', shop.shopId), orderBy('createdAt', 'desc'));
@@ -65,7 +74,27 @@ const Reports = () => {
       unsubscribeSales();
       unsubscribeProducts();
     };
-  }, [shop]);
+  }, [shop, hasAccess]);
+
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
+          <Lock className="w-10 h-10 text-[#ff6600]" />
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Advanced Reports</h2>
+        <p className="text-gray-500 max-w-md mb-8">
+          Unlock daily, weekly, and monthly analytics, profit & loss reports, and export capabilities with the Pro plan.
+        </p>
+        <Link 
+          to="/dashboard/settings" 
+          className="bg-[#ff6600] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#e65c00] transition-all shadow-lg shadow-orange-200"
+        >
+          Upgrade to Pro
+        </Link>
+      </div>
+    );
+  }
 
   // Process data for charts
   const getSalesByDate = () => {

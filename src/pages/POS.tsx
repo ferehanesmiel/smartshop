@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, onSnapshot, addDoc, doc, updateDoc, increment, setDoc, getDoc, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { 
   Search, 
   ShoppingCart, 
@@ -13,28 +14,41 @@ import {
   Receipt,
   CheckCircle2,
   X,
-  Camera
+  QrCode,
+  Tag,
+  Lock
 } from 'lucide-react';
 import { Product, SaleItem, Sale, Receipt as ReceiptType } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { sendSMS } from '../services/smsService';
 import QRScanner from '../components/QRScanner';
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
+import { cn } from '../lib/utils';
+import { Link } from 'react-router-dom';
 
 const POS = () => {
   const { shop } = useAuth();
+  const { isFeatureAllowed } = useSubscription();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [discount, setDiscount] = useState<number>(0);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [showCartOnMobile, setShowCartOnMobile] = useState(false);
+
+  const hasDiscountAccess = isFeatureAllowed('discounts');
 
   const handleScan = (barcode: string) => {
-    const product = products.find(p => p.productId === barcode || p.name.toLowerCase() === barcode.toLowerCase());
+    const product = products.find(p => 
+      p.barcode === barcode || 
+      p.productId === barcode || 
+      p.name.toLowerCase() === barcode.toLowerCase()
+    );
     if (product) {
       addToCart(product);
       setIsScannerOpen(false);
@@ -99,7 +113,8 @@ const POS = () => {
     }));
   };
 
-  const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const total = Math.max(0, subtotal - discount);
 
   const handleCheckout = async () => {
     if (!shop || cart.length === 0) return;
@@ -200,32 +215,38 @@ const POS = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-120px)]">
+    <div className="flex flex-col lg:flex-row gap-8 h-full lg:h-[calc(100vh-120px)] relative">
       {/* Product Selection */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0",
+        showCartOnMobile ? "hidden lg:flex" : "flex"
+      )}>
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Point of Sale</h1>
           <div className="mt-4 relative flex gap-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
-            />
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+              />
+            </div>
             <button
               onClick={() => setIsScannerOpen(true)}
-              className="bg-gray-100 text-gray-600 px-4 py-3 rounded-2xl hover:bg-gray-200 transition-all"
+              className="bg-emerald-50 text-emerald-600 px-4 py-3 rounded-2xl hover:bg-emerald-100 transition-all flex items-center gap-2 border border-emerald-100"
             >
-              <Camera className="w-5 h-5" />
+              <QrCode className="w-5 h-5" />
+              <span className="text-sm font-bold">Scan</span>
             </button>
           </div>
         </div>
         
         {isScannerOpen && <QRScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
 
-        <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="flex-1 overflow-y-auto pb-24 lg:pb-0 pr-2 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
             <button
               key={product.productId}
@@ -257,15 +278,26 @@ const POS = () => {
       </div>
 
       {/* Cart / Checkout */}
-      <div className="w-full lg:w-96 bg-white rounded-3xl border border-gray-100 shadow-xl flex flex-col overflow-hidden">
+      <div className={cn(
+        "w-full lg:w-96 bg-white rounded-3xl border border-gray-100 shadow-xl flex flex-col overflow-hidden transition-all",
+        showCartOnMobile ? "fixed inset-0 z-40 lg:relative lg:inset-auto" : "hidden lg:flex"
+      )}>
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="text-emerald-600 w-5 h-5" />
             <h2 className="font-bold text-gray-900">Current Order</h2>
           </div>
-          <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-1 rounded-lg">
-            {cart.length} items
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-1 rounded-lg">
+              {cart.length} items
+            </span>
+            <button 
+              onClick={() => setShowCartOnMobile(false)}
+              className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -333,7 +365,44 @@ const POS = () => {
             )}
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="space-y-2 pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-500">Subtotal</span>
+              <span className="font-medium text-gray-900">{subtotal.toLocaleString()} ETB</span>
+            </div>
+            
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-500 text-sm flex items-center gap-1">
+                <Tag className="w-4 h-4" />
+                Discount
+              </span>
+              <div className="relative w-32">
+                <input
+                  type="number"
+                  min="0"
+                  max={subtotal}
+                  value={discount || ''}
+                  onChange={(e) => setDiscount(Number(e.target.value))}
+                  disabled={!hasDiscountAccess}
+                  placeholder="0"
+                  className={cn(
+                    "w-full pr-8 pl-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-right",
+                    !hasDiscountAccess && "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  )}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">ETB</span>
+              </div>
+            </div>
+            
+            {!hasDiscountAccess && (
+              <div className="flex items-center gap-1 text-[10px] text-orange-600 bg-orange-50 p-1.5 rounded-lg">
+                <Lock className="w-3 h-3" />
+                <span>Discounts available on Pro plan. <Link to="/dashboard/settings" className="font-bold underline">Upgrade</Link></span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
             <span className="text-gray-500 font-medium">Total</span>
             <span className="text-2xl font-bold text-gray-900">{total.toLocaleString()} ETB</span>
           </div>
@@ -348,6 +417,17 @@ const POS = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Cart Toggle */}
+      {!showCartOnMobile && cart.length > 0 && (
+        <button
+          onClick={() => setShowCartOnMobile(true)}
+          className="lg:hidden fixed bottom-20 right-4 z-30 bg-emerald-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-2 animate-bounce"
+        >
+          <ShoppingCart className="w-6 h-6" />
+          <span className="font-bold">{cart.length}</span>
+        </button>
+      )}
 
       {/* Receipt Modal */}
       <AnimatePresence>

@@ -30,6 +30,12 @@ import AdminSubscriptions from './pages/AdminSubscriptions';
 import AdminRevenue from './pages/AdminRevenue';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
+import MarketplaceLayout from './components/MarketplaceLayout';
+import MarketplaceHome from './pages/MarketplaceHome';
+import MarketplaceShops from './pages/MarketplaceShops';
+import MarketplaceProduct from './pages/MarketplaceProduct';
+import MarketplaceCheckout from './pages/MarketplaceCheckout';
+import { CartProvider } from './CartContext';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -49,14 +55,23 @@ export default function App() {
   return (
     <AuthProvider>
       <SubscriptionProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/shop/:slug" element={<MiniStore />} />
-          
-          <Route path="/dashboard" element={
+        <CartProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              
+              {/* Marketplace Routes */}
+              <Route element={<MarketplaceLayout />}>
+                <Route path="/marketplace" element={<MarketplaceHome />} />
+                <Route path="/shops" element={<MarketplaceShops />} />
+                <Route path="/shop/:slug" element={<MiniStore />} />
+                <Route path="/product/:productId" element={<MarketplaceProduct />} />
+                <Route path="/checkout" element={<MarketplaceCheckout />} />
+              </Route>
+              
+              <Route path="/dashboard" element={
             <ProtectedRoute>
               <Layout>
                 <Dashboard />
@@ -134,10 +149,11 @@ export default function App() {
             <Route path="site-control" element={<AdminSiteControl />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
-        </Routes>
-      </Router>
-    </SubscriptionProvider>
-  </AuthProvider>
+            </Routes>
+          </Router>
+        </CartProvider>
+      </SubscriptionProvider>
+    </AuthProvider>
   );
 }
 

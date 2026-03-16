@@ -1,65 +1,58 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from './firebase';
 import { useAuth } from './AuthContext';
-import { Subscription } from './types';
-import { handleFirestoreError, OperationType } from './lib/firestoreUtils';
+import { PlanType } from './constants';
 
 interface SubscriptionContextType {
-  subscription: Subscription | null;
   loading: boolean;
   isFeatureAllowed: (feature: string) => boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType>({
-  subscription: null,
-  loading: true,
+  loading: false,
   isFeatureAllowed: () => false,
 });
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { shop } = useAuth();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const { shop, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!shop) {
+    if (!authLoading) {
       setLoading(false);
-      return;
     }
-
-    const q = query(collection(db, 'subscriptions'), where('shopId', '==', shop.shopId));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        setSubscription(snapshot.docs[0].data() as Subscription);
-      }
-      setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'subscriptions');
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [shop]);
+  }, [authLoading]);
 
   const isFeatureAllowed = (feature: string): boolean => {
-    const plan = subscription?.planName || 'basic';
-    if (subscription?.subscriptionStatus === 'expired') return false;
+    if (!shop) return false;
     
-    const features: Record<string, string[]> = {
-      basic: ['inventory', 'sales-tracking'],
-      pro: ['inventory', 'sales-tracking', 'online-store', 'orders', 'customers', 'receipts'],
-      premium: ['inventory', 'sales-tracking', 'online-store', 'orders', 'customers', 'receipts', 'sms-notifications', 'advanced-reports', 'loyalty-points']
+    // Default to basic if no plan is set or if it's an unrecognized plan
+    const plan = (shop.plan as PlanType) || 'basic';
+    
+    // If shop status is inactive or expired, restrict features
+    if (shop.status === 'inactive' || shop.subscriptionStatus === 'expired') {
+      return false;
+    }
+    
+    const features: Record<PlanType, string[]> = {
+      basic: ['inventory', 'sales-tracking', 'receipts'],
+      pro: ['inventory', 'sales-tracking', 'receipts', 'orders', 'customers', 'advanced-reports', 'discounts'],
+      premium: ['inventory', 'sales-tracking', 'receipts', 'orders', 'customers', 'advanced-reports', 'discounts', 'multi-branch', 'staff-roles', 'sms-notifications', 'api-integrations', 'custom-branding']
     };
 
-    return features[plan]?.includes(feature) || false;
+    // If the plan exists in our features map, check if the feature is included
+    if (features[plan]) {
+      return features[plan].includes(feature);
+    }
+
+    return false;
   };
 
   return (
-    <SubscriptionContext.Provider value={{ subscription, loading, isFeatureAllowed }}>
+    <SubscriptionContext.Provider value={{ loading, isFeatureAllowed }}>
       {children}
     </SubscriptionContext.Provider>
   );
 };
 
 export const useSubscription = () => useContext(SubscriptionContext);
+

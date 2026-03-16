@@ -19,6 +19,9 @@ export interface Shop {
   createdAt: string;
   ownerUid: string;
   slug: string;
+  description?: string;
+  logoUrl?: string;
+  isMarketplaceEnabled?: boolean;
 }
 
 export interface Product {
@@ -32,6 +35,8 @@ export interface Product {
   imageUrl?: string;
   description?: string;
   createdAt: string;
+  slug?: string;
+  shopName?: string;
 }
 
 export interface SaleItem {
@@ -66,6 +71,8 @@ export interface OrderItem {
   name: string;
   price: number;
   quantity: number;
+  imageUrl?: string;
+  shopId?: string;
 }
 
 export interface Order {
@@ -73,12 +80,14 @@ export interface Order {
   shopId: string;
   customerPhone: string;
   customerName?: string;
-  deliveryAddress?: string;
+  customerAddress?: string;
   note?: string;
-  products: OrderItem[];
+  items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'accepted' | 'completed' | 'rejected';
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  paymentMethod?: 'cod' | 'telebirr' | 'bank_transfer';
   createdAt: string;
+  isMarketplaceOrder?: boolean;
 }
 
 export interface Subscription {

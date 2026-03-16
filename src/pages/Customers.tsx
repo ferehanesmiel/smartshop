@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { 
   Users, 
   Search, 
@@ -9,19 +10,27 @@ import {
   Star, 
   History,
   ChevronRight,
-  UserPlus
+  UserPlus,
+  Lock
 } from 'lucide-react';
 import { Customer } from '../types';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 
 const Customers = () => {
   const { shop } = useAuth();
+  const { isFeatureAllowed } = useSubscription();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const hasAccess = isFeatureAllowed('customers');
+
   useEffect(() => {
-    if (!shop) return;
+    if (!shop || !hasAccess) {
+      setLoading(false);
+      return;
+    }
 
     const customersRef = collection(db, 'customers');
     const q = query(customersRef, where('shopId', '==', shop.shopId), orderBy('lastPurchaseDate', 'desc'));
@@ -36,7 +45,27 @@ const Customers = () => {
     });
 
     return () => unsubscribe();
-  }, [shop]);
+  }, [shop, hasAccess]);
+
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
+          <Lock className="w-10 h-10 text-[#ff6600]" />
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Customer Database</h2>
+        <p className="text-gray-500 max-w-md mb-8">
+          Track loyalty, purchase history, and manage your customer relationships with the Pro plan.
+        </p>
+        <Link 
+          to="/dashboard/settings" 
+          className="bg-[#ff6600] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#e65c00] transition-all shadow-lg shadow-orange-200"
+        >
+          Upgrade to Pro
+        </Link>
+      </div>
+    );
+  }
 
   const filteredCustomers = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

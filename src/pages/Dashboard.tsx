@@ -13,22 +13,31 @@ import {
   Store,
   User,
   Phone,
-  Plus
+  Plus,
+  Zap,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { Sale, Product, Order } from '../types';
 import { motion } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '../lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import { PLANS, PlanType } from '../constants';
 
 const Dashboard = () => {
   const { shop, user } = useAuth();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const urlPlan = (queryParams.get('plan') as PlanType) || 'basic';
+
   const [stats, setStats] = useState({
     todaySales: 0,
     totalProducts: 0,
     lowStock: 0,
     pendingOrders: 0,
+    totalUsers: 0,
   });
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,30 +46,51 @@ const Dashboard = () => {
     shopName: '',
     ownerName: user?.displayName || '',
     phone: '',
+    plan: urlPlan,
   });
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (urlPlan && PLANS[urlPlan]) {
+      setNewShopData(prev => ({ ...prev, plan: urlPlan }));
+    }
+  }, [urlPlan]);
 
   const handleCreateShop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setIsCreatingShop(true);
+    setError('');
     try {
       const slug = newShopData.shopName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const shopsRef = collection(db, 'shops');
+      const q = query(shopsRef, where('slug', '==', slug));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        throw new Error('Shop name is already taken. Please try another one.');
+      }
+
       const shopId = doc(collection(db, 'shops')).id;
+      const planInfo = PLANS[newShopData.plan as PlanType];
+
       await setDoc(doc(db, 'shops', shopId), {
         shopId,
         shopName: newShopData.shopName,
         ownerName: newShopData.ownerName,
         phone: newShopData.phone,
         email: user.email,
-        plan: 'free',
+        plan: newShopData.plan,
+        planLimits: planInfo.limits,
+        subscriptionStatus: 'active',
         createdAt: new Date().toISOString(),
         ownerUid: user.uid,
         slug,
         status: 'active',
       });
       window.location.reload(); // Refresh to update AuthContext
-    } catch (err) {
-      console.error('Error creating shop:', err);
+    } catch (err: any) {
+      setError(err.message || 'Failed to create shop');
     } finally {
       setIsCreatingShop(false);
     }
@@ -158,39 +188,48 @@ const Dashboard = () => {
             <p className="text-gray-500 mt-2">You're almost there! Just a few details to get started.</p>
           </div>
 
-          <form onSubmit={handleCreateShop} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Shop Name</label>
-              <div className="relative">
-                <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  required
-                  value={newShopData.shopName}
-                  onChange={(e) => setNewShopData({ ...newShopData, shopName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                  placeholder="Abyssinia Boutique"
-                />
+          <form onSubmit={handleCreateShop} className="p-8 space-y-6">
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                {error}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 ml-1">Shop Name</label>
+                <div className="relative">
+                  <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    required
+                    value={newShopData.shopName}
+                    onChange={(e) => setNewShopData({ ...newShopData, shopName: e.target.value })}
+                    className="w-full pl-10 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#ff6600] outline-none transition-all"
+                    placeholder="Abyssinia Boutique"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 ml-1">Owner Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    required
+                    value={newShopData.ownerName}
+                    onChange={(e) => setNewShopData({ ...newShopData, ownerName: e.target.value })}
+                    className="w-full pl-10 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#ff6600] outline-none transition-all"
+                    placeholder="Abebe Bikila"
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Owner Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  required
-                  value={newShopData.ownerName}
-                  onChange={(e) => setNewShopData({ ...newShopData, ownerName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                  placeholder="Abebe Bikila"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 ml-1">Phone Number</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -198,16 +237,41 @@ const Dashboard = () => {
                   required
                   value={newShopData.phone}
                   onChange={(e) => setNewShopData({ ...newShopData, phone: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full pl-10 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#ff6600] outline-none transition-all"
                   placeholder="+251 911 223 344"
                 />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-sm font-bold text-gray-700 ml-1">Select Package</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {(Object.keys(PLANS) as PlanType[]).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setNewShopData({ ...newShopData, plan: p })}
+                    className={cn(
+                      "p-4 rounded-2xl border-2 text-left transition-all",
+                      newShopData.plan === p 
+                        ? "border-[#ff6600] bg-orange-50" 
+                        : "border-gray-100 bg-white hover:border-orange-200"
+                    )}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-bold text-gray-900 capitalize">{PLANS[p].name}</span>
+                      {newShopData.plan === p && <CheckCircle2 className="w-5 h-5 text-[#ff6600]" />}
+                    </div>
+                    <p className="text-xs text-gray-500">{PLANS[p].price} Birr/mo</p>
+                  </button>
+                ))}
               </div>
             </div>
 
             <button
               type="submit"
               disabled={isCreatingShop}
-              className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
+              className="w-full bg-[#ff6600] text-white py-5 rounded-2xl font-bold text-lg shadow-lg shadow-orange-200 hover:bg-[#e65c00] transition-all disabled:opacity-50 active:scale-[0.98]"
             >
               {isCreatingShop ? 'Creating Shop...' : 'Launch My Shop'}
             </button>
@@ -251,42 +315,99 @@ const Dashboard = () => {
     },
   ];
 
+  const planKey = (shop?.plan && PLANS[shop.plan as PlanType]) ? (shop.plan as PlanType) : 'basic';
+  const currentPlan = PLANS[planKey];
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
           <p className="text-gray-500">Welcome back to {shop?.shopName}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link 
-            to="/dashboard/pos"
-            className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200"
-          >
-            <Plus className="w-5 h-5" />
-            New Sale
-          </Link>
+        
+        <div className="flex items-center gap-3 bg-white p-2 pr-4 rounded-2xl shadow-sm border border-gray-100">
+          <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+            <Zap className="w-5 h-5 text-[#ff6600]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Plan</span>
+              <span className="px-2 py-0.5 bg-[#ff6600] text-white text-[10px] font-bold rounded-full uppercase">
+                {planKey}
+              </span>
+            </div>
+            <p className="text-sm font-bold text-gray-900">
+              {currentPlan.price} Birr / Month
+            </p>
+          </div>
         </div>
       </div>
 
-      {(!shop?.plan || shop.plan === 'free') && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-3xl p-6 text-white flex items-center justify-between shadow-lg"
-        >
+      {/* Plan Usage & Limits Banner */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
+          <div className="relative z-10">
+            <h2 className="text-2xl font-bold mb-2">Plan Usage & Limits</h2>
+            <p className="text-gray-400 mb-6">Monitor your resources and upgrade when needed.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Products</span>
+                  <span className="font-bold">
+                    {stats.totalProducts} / {currentPlan.limits.products === Infinity ? '∞' : currentPlan.limits.products}
+                  </span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-[#ff6600] transition-all duration-1000" 
+                    style={{ 
+                      width: `${Math.min((stats.totalProducts / (currentPlan.limits.products === Infinity ? stats.totalProducts || 1 : currentPlan.limits.products)) * 100, 100)}%` 
+                    }}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Users</span>
+                  <span className="font-bold">
+                    {stats.totalUsers} / {currentPlan.limits.users === Infinity ? '∞' : currentPlan.limits.users}
+                  </span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 transition-all duration-1000" 
+                    style={{ 
+                      width: `${Math.min((stats.totalUsers / (currentPlan.limits.users === Infinity ? stats.totalUsers || 1 : currentPlan.limits.users)) * 100, 100)}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <Zap className="absolute -right-8 -bottom-8 w-48 h-48 text-white/5 rotate-12" />
+        </div>
+
+        <div className="bg-orange-50 border border-orange-100 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
           <div>
-            <h3 className="text-lg font-bold">Unlock more features</h3>
-            <p className="text-emerald-100 text-sm">Upgrade to Pro or Premium to get advanced analytics and more.</p>
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
+              <ArrowUpRight className="w-6 h-6 text-[#ff6600]" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Need More Power?</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Upgrade to Premium for unlimited users, products, and multi-branch support.
+            </p>
           </div>
           <Link 
-            to="/dashboard/settings"
-            className="bg-white text-emerald-700 px-6 py-3 rounded-2xl font-bold hover:bg-emerald-50 transition-all"
+            to="/dashboard/settings" 
+            className="mt-6 w-full bg-white text-[#ff6600] py-4 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all border border-orange-100 text-center"
           >
             Upgrade Plan
           </Link>
-        </motion.div>
-      )}
+        </div>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
