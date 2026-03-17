@@ -62,6 +62,8 @@ const Products = () => {
     image: '',
     description: '',
     barcode: '',
+    vatRate: '15',
+    vatType: 'inclusive' as 'inclusive' | 'exclusive',
   });
 
   useEffect(() => {
@@ -98,10 +100,23 @@ const Products = () => {
         image: product.imageUrl || '',
         description: product.description || '',
         barcode: product.barcode || '',
+        vatRate: (product.vatRate ?? 15).toString(),
+        vatType: product.vatType || 'inclusive',
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', price: '', costPrice: '', quantity: '', category: '', image: '', description: '', barcode: '' });
+      setFormData({ 
+        name: '', 
+        price: '', 
+        costPrice: '', 
+        quantity: '', 
+        category: '', 
+        image: '', 
+        description: '', 
+        barcode: '',
+        vatRate: '15',
+        vatType: 'inclusive',
+      });
     }
     setIsModalOpen(true);
   };
@@ -119,6 +134,8 @@ const Products = () => {
       imageUrl: formData.image || `https://picsum.photos/seed/${formData.name}/200`,
       description: formData.description,
       barcode: formData.barcode,
+      vatRate: parseFloat(formData.vatRate),
+      vatType: formData.vatType,
       shopId: shop.shopId,
       shopName: shop.shopName,
       slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
@@ -335,6 +352,27 @@ const Products = () => {
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                       placeholder="0"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">VAT Rate (%)</label>
+                    <input
+                      type="number"
+                      value={formData.vatRate}
+                      onChange={(e) => setFormData({ ...formData, vatRate: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                      placeholder="15"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">VAT Mode</label>
+                    <select
+                      value={formData.vatType}
+                      onChange={(e) => setFormData({ ...formData, vatType: e.target.value as 'inclusive' | 'exclusive' })}
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                    >
+                      <option value="inclusive">Inclusive</option>
+                      <option value="exclusive">Exclusive</option>
+                    </select>
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>

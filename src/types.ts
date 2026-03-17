@@ -43,6 +43,8 @@ export interface Product {
   createdAt: string;
   slug?: string;
   shopName?: string;
+  vatRate?: number;
+  vatType?: 'inclusive' | 'exclusive';
 }
 
 export interface SaleItem {
@@ -51,6 +53,11 @@ export interface SaleItem {
   quantity: number;
   price: number;
   costPrice?: number;
+  vatRate?: number;
+  vatType?: 'inclusive' | 'exclusive';
+  vatAmount?: number;
+  netPrice?: number;
+  profit?: number;
 }
 
 export interface Sale {
@@ -61,8 +68,14 @@ export interface Sale {
   discount?: number;
   vatAmount?: number;
   totalAmount: number;
-  paymentMethod: 'cash' | 'mobile' | 'card';
+  totalCost?: number;
+  totalProfit?: number;
+  paymentMethod: 'cash' | 'mobile' | 'card' | 'telebirr' | 'bank_transfer';
+  amountPaid?: number;
+  changeAmount?: number;
   customerPhone?: string;
+  customerName?: string;
+  cashierName?: string;
   createdAt: string;
 }
 
@@ -123,14 +136,22 @@ export interface Receipt {
   shopId: string;
   saleId: string;
   customerPhone?: string;
+  customerName?: string;
+  cashierName?: string;
   items: SaleItem[];
   subtotal?: number;
   discount?: number;
   vatAmount?: number;
   totalAmount: number;
-  paymentMethod: 'cash' | 'mobile' | 'card';
+  totalCost?: number;
+  totalProfit?: number;
+  paymentMethod: 'cash' | 'mobile' | 'card' | 'telebirr' | 'bank_transfer';
+  amountPaid?: number;
+  changeAmount?: number;
   createdAt: string;
   shopName: string;
+  shopAddress?: string;
+  shopPhone?: string;
 }
 
 export interface Branch {

@@ -187,11 +187,7 @@ const Reports = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Total Revenue', value: `${sales.reduce((acc, s) => acc + s.totalAmount, 0).toLocaleString()} ETB`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Total Profit', value: `${sales.reduce((acc, s) => {
-            const saleCost = s.items.reduce((sum, item) => sum + ((item.costPrice || 0) * item.quantity), 0);
-            const revenueWithoutVat = s.totalAmount - (s.vatAmount || 0);
-            return acc + (revenueWithoutVat - saleCost);
-          }, 0).toLocaleString()} ETB`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Total Profit', value: `${sales.reduce((acc, s) => acc + (s.totalProfit || 0), 0).toLocaleString()} ETB`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Total VAT', value: `${sales.reduce((acc, s) => acc + (s.vatAmount || 0), 0).toLocaleString()} ETB`, icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
           { label: 'Total Sales', value: sales.length, icon: ShoppingCart, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map((stat, i) => (
@@ -258,6 +254,42 @@ const Reports = () => {
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* Profit Analysis */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-emerald-600" />
+            Profit Analysis
+          </h3>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={[
+                { name: 'Revenue', value: sales.reduce((acc, s) => acc + s.totalAmount, 0) },
+                { name: 'Cost', value: sales.reduce((acc, s) => acc + (s.totalCost || 0), 0) },
+                { name: 'VAT', value: sales.reduce((acc, s) => acc + (s.vatAmount || 0), 0) },
+                { name: 'Profit', value: sales.reduce((acc, s) => acc + (s.totalProfit || 0), 0) },
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#4b5563' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                <Tooltip 
+                  cursor={{ fill: '#f9fafb' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                  <Cell fill="#10b981" />
+                  <Cell fill="#ef4444" />
+                  <Cell fill="#8b5cf6" />
+                  <Cell fill="#3b82f6" />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

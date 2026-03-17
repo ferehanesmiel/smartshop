@@ -46,6 +46,20 @@
 // Fields:
 //   - shopId: string (required)
 //
+// Collection: staff
+// Document ID: staffId
+// Fields:
+//   - shopId: string (required)
+//   - name: string (required)
+//   - email: string (required)
+//   - role: string (required)
+//
+// Collection: branches
+// Document ID: branchId
+// Fields:
+//   - shopId: string (required)
+//   - name: string (required)
+//
 // Collection: subscriptions
 // Document ID: subscriptionId
 // Fields:
@@ -83,9 +97,13 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && (
-        request.auth.token.email == "esmielferehan@gmail.com" && request.auth.token.email_verified == true ||
+        request.auth.token.email == "esmielferehan@gmail.com" ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
+    }
+
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
     }
 
     // ===============================================================
@@ -135,6 +153,22 @@ service cloud.firestore {
       allow create: if isShopOwner(request.resource.data.shopId);
       allow update: if isAdmin() || isShopOwner(resource.data.shopId);
       allow delete: if isAdmin();
+    }
+
+    match /staff/{staffId} {
+      allow read: if isAdmin() || isShopOwner(resource.data.shopId);
+      allow create: if isShopOwner(request.resource.data.shopId);
+      allow update: if isShopOwner(resource.data.shopId) && 
+                      (request.resource.data.shopId == resource.data.shopId);
+      allow delete: if isShopOwner(resource.data.shopId);
+    }
+
+    match /branches/{branchId} {
+      allow read: if isAdmin() || isShopOwner(resource.data.shopId);
+      allow create: if isShopOwner(request.resource.data.shopId);
+      allow update: if isShopOwner(resource.data.shopId) && 
+                      (request.resource.data.shopId == resource.data.shopId);
+      allow delete: if isShopOwner(resource.data.shopId);
     }
 
     match /subscriptions/{subscriptionId} {
