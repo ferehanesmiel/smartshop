@@ -27,7 +27,7 @@ import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { PLANS, PlanType } from '../constants';
 
 const Dashboard = () => {
-  const { shop, user } = useAuth();
+  const { shop, user, userRole } = useAuth();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const urlPlan = (queryParams.get('plan') as PlanType) || 'basic';
@@ -143,12 +143,22 @@ const Dashboard = () => {
       handleFirestoreError(error, OperationType.LIST, 'orders');
     });
 
+    // Listen for total users
+    const usersRef = collection(db, 'users');
+    const qUsers = query(usersRef, where('shop_id', '==', shop.shopId));
+    const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
+      setStats(prev => ({ ...prev, totalUsers: snapshot.size }));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'users');
+    });
+
     setLoading(false);
 
     return () => {
       unsubscribeProducts();
       unsubscribeSales();
       unsubscribeOrders();
+      unsubscribeUsers();
     };
   }, [shop]);
 
@@ -281,8 +291,10 @@ const Dashboard = () => {
     );
   }
 
-  const cards = [
-    { 
+  const cards = [];
+
+  if (userRole === 'owner' || userRole === 'manager' || userRole === 'accountant') {
+    cards.push({ 
       title: "Today's Sales", 
       value: `${stats.todaySales.toLocaleString()} ETB`, 
       icon: TrendingUp, 
@@ -290,38 +302,44 @@ const Dashboard = () => {
       bg: "bg-emerald-50",
       trend: "+12%",
       trendUp: true
-    },
-    { 
+    });
+  }
+
+  if (userRole === 'owner' || userRole === 'manager' || userRole === 'inventory') {
+    cards.push({ 
       title: "Total Products", 
       value: stats.totalProducts, 
       icon: Package, 
       color: "text-blue-600", 
       bg: "bg-blue-50"
-    },
-    { 
+    });
+    cards.push({ 
       title: "Low Stock Alerts", 
       value: stats.lowStock, 
       icon: AlertTriangle, 
       color: "text-amber-600", 
       bg: "bg-amber-50",
       alert: stats.lowStock > 0
-    },
-    { 
+    });
+  }
+
+  if (userRole === 'owner' || userRole === 'manager') {
+    cards.push({ 
       title: "Pending Orders", 
       value: stats.pendingOrders, 
       icon: ShoppingBag, 
       color: "text-purple-600", 
       bg: "bg-purple-50"
-    },
-    { 
+    });
+    cards.push({ 
       title: "Marketplace", 
       value: shop?.isMarketplaceEnabled ? "Active" : "Inactive", 
       icon: Store, 
       color: "text-emerald-600", 
       bg: "bg-emerald-50",
       link: "/dashboard/marketplace"
-    },
-  ];
+    });
+  }
 
   const planKey = (shop?.plan && PLANS[shop.plan as PlanType]) ? (shop.plan as PlanType) : 'basic';
   const currentPlan = PLANS[planKey];
@@ -353,69 +371,71 @@ const Dashboard = () => {
       </div>
 
       {/* Plan Usage & Limits Banner */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold mb-2">Plan Usage & Limits</h2>
-            <p className="text-gray-400 mb-6">Monitor your resources and upgrade when needed.</p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Products</span>
-                  <span className="font-bold">
-                    {stats.totalProducts} / {currentPlan.limits.products === Infinity ? '∞' : currentPlan.limits.products}
-                  </span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[#ff6600] transition-all duration-1000" 
-                    style={{ 
-                      width: `${Math.min((stats.totalProducts / (currentPlan.limits.products === Infinity ? stats.totalProducts || 1 : currentPlan.limits.products)) * 100, 100)}%` 
-                    }}
-                  />
-                </div>
-              </div>
+      {userRole === 'owner' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
+            <div className="relative z-10">
+              <h2 className="text-2xl font-bold mb-2">Plan Usage & Limits</h2>
+              <p className="text-gray-400 mb-6">Monitor your resources and upgrade when needed.</p>
               
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Users</span>
-                  <span className="font-bold">
-                    {stats.totalUsers} / {currentPlan.limits.users === Infinity ? '∞' : currentPlan.limits.users}
-                  </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Products</span>
+                    <span className="font-bold">
+                      {stats.totalProducts} / {currentPlan.limits.products === Infinity ? '∞' : currentPlan.limits.products}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[#ff6600] transition-all duration-1000" 
+                      style={{ 
+                        width: `${Math.min((stats.totalProducts / (currentPlan.limits.products === Infinity ? stats.totalProducts || 1 : currentPlan.limits.products)) * 100, 100)}%` 
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-emerald-500 transition-all duration-1000" 
-                    style={{ 
-                      width: `${Math.min((stats.totalUsers / (currentPlan.limits.users === Infinity ? stats.totalUsers || 1 : currentPlan.limits.users)) * 100, 100)}%` 
-                    }}
-                  />
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Users</span>
+                    <span className="font-bold">
+                      {stats.totalUsers} / {currentPlan.limits.users === Infinity ? '∞' : currentPlan.limits.users}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 transition-all duration-1000" 
+                      style={{ 
+                        width: `${Math.min((stats.totalUsers / (currentPlan.limits.users === Infinity ? stats.totalUsers || 1 : currentPlan.limits.users)) * 100, 100)}%` 
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+            <Zap className="absolute -right-8 -bottom-8 w-48 h-48 text-white/5 rotate-12" />
           </div>
-          <Zap className="absolute -right-8 -bottom-8 w-48 h-48 text-white/5 rotate-12" />
-        </div>
 
-        <div className="bg-orange-50 border border-orange-100 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
-          <div>
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
-              <ArrowUpRight className="w-6 h-6 text-[#ff6600]" />
+          <div className="bg-orange-50 border border-orange-100 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
+            <div>
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
+                <ArrowUpRight className="w-6 h-6 text-[#ff6600]" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Need More Power?</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Upgrade to Premium for unlimited users, products, and multi-branch support.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Need More Power?</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Upgrade to Premium for unlimited users, products, and multi-branch support.
-            </p>
+            <Link 
+              to="/dashboard/settings" 
+              className="mt-6 w-full bg-white text-[#ff6600] py-4 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all border border-orange-100 text-center"
+            >
+              Upgrade Plan
+            </Link>
           </div>
-          <Link 
-            to="/dashboard/settings" 
-            className="mt-6 w-full bg-white text-[#ff6600] py-4 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all border border-orange-100 text-center"
-          >
-            Upgrade Plan
-          </Link>
         </div>
-      </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -462,70 +482,74 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Sales Chart */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">Revenue Overview</h3>
-              <p className="text-sm text-gray-500">Sales performance for the last 7 days</p>
+        {(userRole === 'owner' || userRole === 'manager' || userRole === 'accountant') && (
+          <>
+            <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Revenue Overview</h3>
+                  <p className="text-sm text-gray-500">Sales performance for the last 7 days</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl">
+                  <TrendingUp className="w-4 h-4" />
+                  Live Updates
+                </div>
+              </div>
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={getRevenueData()}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl">
-              <TrendingUp className="w-4 h-4" />
-              Live Updates
-            </div>
-          </div>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={getRevenueData()}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                />
-                <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
 
-        {/* Recent Sales */}
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold text-gray-900">Recent Sales</h3>
-            <Link to="/dashboard/sales" className="text-sm font-bold text-emerald-600 hover:underline">View All</Link>
-          </div>
-          <div className="space-y-6">
-            {recentSales.map((sale) => (
-              <div key={sale.saleId} className="flex items-center justify-between group cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
-                    <Clock className="w-6 h-6 text-gray-400 group-hover:text-emerald-600 transition-colors" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">#{sale?.saleId?.slice(0, 8)}</p>
-                    <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</p>
-                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{sale.paymentMethod}</p>
-                </div>
+            {/* Recent Sales */}
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-bold text-gray-900">Recent Sales</h3>
+                <Link to="/dashboard/sales" className="text-sm font-bold text-emerald-600 hover:underline">View All</Link>
               </div>
-            ))}
-            {recentSales.length === 0 && (
-              <div className="text-center py-12 text-gray-400">
-                <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No sales today yet</p>
+              <div className="space-y-6">
+                {recentSales.map((sale) => (
+                  <div key={sale.saleId} className="flex items-center justify-between group cursor-pointer">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                        <Clock className="w-6 h-6 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">#{sale?.saleId?.slice(0, 8)}</p>
+                        <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</p>
+                      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{sale.paymentMethod}</p>
+                    </div>
+                  </div>
+                ))}
+                {recentSales.length === 0 && (
+                  <div className="text-center py-12 text-gray-400">
+                    <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p>No sales today yet</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

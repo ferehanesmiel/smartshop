@@ -46,10 +46,10 @@
 // Fields:
 //   - shopId: string (required)
 //
-// Collection: staff
-// Document ID: staffId
+// Collection: users
+// Document ID: email (or userId)
 // Fields:
-//   - shopId: string (required)
+//   - shop_id: string (required)
 //   - name: string (required)
 //   - email: string (required)
 //   - role: string (required)
@@ -95,13 +95,13 @@ service cloud.firestore {
       );
     }
 
-    function isStaff(shopId) {
+    function isShopUser(shopId) {
       let shopDoc = get(/databases/$(database)/documents/shops/$(shopId));
-      return isAuthenticated() && shopDoc != null && 'staffEmails' in shopDoc.data && request.auth.token.email in shopDoc.data.staffEmails;
+      return isAuthenticated() && shopDoc != null && 'userEmails' in shopDoc.data && request.auth.token.email in shopDoc.data.userEmails;
     }
 
-    function isShopOwnerOrStaff(shopId) {
-      return isShopOwner(shopId) || isStaff(shopId);
+    function isShopOwnerOrUser(shopId) {
+      return isShopOwner(shopId) || isShopUser(shopId);
     }
 
     function isAdmin() {
@@ -133,52 +133,52 @@ service cloud.firestore {
 
     match /products/{productId} {
       allow read: if true;
-      allow create: if isShopOwnerOrStaff(request.resource.data.shopId);
-      allow update: if isShopOwnerOrStaff(resource.data.shopId) && 
+      allow create: if isShopOwnerOrUser(request.resource.data.shopId);
+      allow update: if isShopOwnerOrUser(resource.data.shopId) && 
                       (request.resource.data.shopId == resource.data.shopId);
-      allow delete: if isShopOwnerOrStaff(resource.data.shopId);
+      allow delete: if isShopOwnerOrUser(resource.data.shopId);
     }
 
     match /sales/{saleId} {
-      allow read: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
-      allow create: if isShopOwnerOrStaff(request.resource.data.shopId);
-      allow update: if isShopOwnerOrStaff(resource.data.shopId) && 
+      allow read: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
+      allow create: if isShopOwnerOrUser(request.resource.data.shopId);
+      allow update: if isShopOwnerOrUser(resource.data.shopId) && 
                       (request.resource.data.shopId == resource.data.shopId);
       allow delete: if isAdmin();
     }
 
     match /customers/{customerId} {
-      allow read: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
-      allow create: if isShopOwnerOrStaff(request.resource.data.shopId);
-      allow update: if isShopOwnerOrStaff(resource.data.shopId) && 
+      allow read: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
+      allow create: if isShopOwnerOrUser(request.resource.data.shopId);
+      allow update: if isShopOwnerOrUser(resource.data.shopId) && 
                       (request.resource.data.shopId == resource.data.shopId);
-      allow delete: if isShopOwnerOrStaff(resource.data.shopId);
+      allow delete: if isShopOwnerOrUser(resource.data.shopId);
     }
 
     match /orders/{orderId} {
-      allow read: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
+      allow read: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
       allow create: if true; // Public can place orders
-      allow update: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
-      allow delete: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
+      allow update: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
+      allow delete: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
     }
 
     match /receipts/{receiptId} {
-      allow read: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
-      allow create: if isShopOwnerOrStaff(request.resource.data.shopId);
-      allow update: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
+      allow read: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
+      allow create: if isShopOwnerOrUser(request.resource.data.shopId);
+      allow update: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
       allow delete: if isAdmin();
     }
 
-    match /staff/{staffId} {
-      allow read: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId) || (isAuthenticated() && resource.data.email == request.auth.token.email);
-      allow create: if isShopOwner(request.resource.data.shopId);
-      allow update: if isShopOwner(resource.data.shopId) && 
-                      (request.resource.data.shopId == resource.data.shopId);
-      allow delete: if isShopOwner(resource.data.shopId);
+    match /users/{userId} {
+      allow read: if isAdmin() || isShopOwnerOrUser(resource.data.shop_id) || (isAuthenticated() && resource.data.email == request.auth.token.email);
+      allow create: if isShopOwner(request.resource.data.shop_id);
+      allow update: if isShopOwner(resource.data.shop_id) && 
+                      (request.resource.data.shop_id == resource.data.shop_id);
+      allow delete: if isShopOwner(resource.data.shop_id);
     }
 
     match /branches/{branchId} {
-      allow read: if isAdmin() || isShopOwnerOrStaff(resource.data.shopId);
+      allow read: if isAdmin() || isShopOwnerOrUser(resource.data.shopId);
       allow create: if isShopOwner(request.resource.data.shopId);
       allow update: if isShopOwner(resource.data.shopId) && 
                       (request.resource.data.shopId == resource.data.shopId);

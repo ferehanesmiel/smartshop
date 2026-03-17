@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { auth, db } from './firebase';
-import { Shop } from './types';
+import { Shop, User } from './types';
 
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null;
+  userData: User | null;
+  userRole: User['role'] | null;
   shop: Shop | null;
   loading: boolean;
   isAdmin: boolean;
@@ -13,13 +15,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  userData: null,
+  userRole: null,
   shop: null,
   loading: true,
   isAdmin: false,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<User['role'] | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -29,6 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(user);
       if (!user) {
         setShop(null);
+        setUserData(null);
+        setUserRole(null);
         setIsAdmin(false);
         setLoading(false);
       } else {
@@ -42,57 +50,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!user) return;
 
-    let unsubscribeStaff: (() => void) | undefined;
+    let unsubscribeUser: (() => void) | undefined;
     let unsubscribeShopDoc: (() => void) | undefined;
+    let unsubscribeAdmin: (() => void) | undefined;
 
-    const shopsRef = collection(db, 'shops');
-    const q = query(shopsRef, where('ownerUid', '==', user.uid));
+    // Check if user is an admin
+    const adminRef = doc(db, 'admins', user.uid);
+    unsubscribeAdmin = onSnapshot(adminRef, (adminDoc) => {
+      setIsAdmin(user.email === 'esmielferehan@gmail.com' || adminDoc.exists());
+    });
+
+    const usersRef = collection(db, 'users');
+    const userQ = query(usersRef, where('email', '==', user.email));
     
-    const unsubscribeShop = onSnapshot(q, async (querySnapshot) => {
-      if (!querySnapshot.empty) {
-        setShop({ shopId: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as Shop);
-        setLoading(false);
-      } else {
-        // Check if user is a staff member
-        const staffRef = collection(db, 'staff');
-        const staffQ = query(staffRef, where('email', '==', user.email));
+    unsubscribeUser = onSnapshot(userQ, (userSnapshot) => {
+      if (!userSnapshot.empty) {
+        const uData = { user_id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
+        setUserData(uData);
+        setUserRole(uData.role);
         
-        unsubscribeStaff = onSnapshot(staffQ, (staffSnapshot) => {
-          if (!staffSnapshot.empty) {
-            const staffData = staffSnapshot.docs[0].data();
-            // Fetch the shop this staff member belongs to
-            const shopDocRef = doc(db, 'shops', staffData.shopId);
-            unsubscribeShopDoc = onSnapshot(shopDocRef, (shopDoc) => {
-              if (shopDoc.exists()) {
-                setShop({ shopId: shopDoc.id, ...shopDoc.data() } as Shop);
-              } else {
-                setShop(null);
-              }
-              setLoading(false);
-            });
+        // Fetch the shop this user belongs to
+        const shopDocRef = doc(db, 'shops', uData.shop_id);
+        unsubscribeShopDoc = onSnapshot(shopDocRef, (shopDoc) => {
+          if (shopDoc.exists()) {
+            setShop({ shopId: shopDoc.id, ...shopDoc.data() } as Shop);
           } else {
             setShop(null);
+          }
+          setLoading(false);
+        });
+      } else {
+        // Fallback for legacy owners who might not be in the users collection yet
+        const shopsRef = collection(db, 'shops');
+        const q = query(shopsRef, where('ownerUid', '==', user.uid));
+        
+        unsubscribeShopDoc = onSnapshot(q, async (querySnapshot) => {
+          if (!querySnapshot.empty) {
+            setShop({ shopId: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as Shop);
+            setUserRole('owner');
+            setLoading(false);
+          } else {
+            setShop(null);
+            setUserData(null);
+            setUserRole(null);
             setLoading(false);
           }
         }, (error) => {
-          console.error("Error listening to staff changes:", error);
+          console.error("Error listening to shop changes:", error);
           setLoading(false);
         });
       }
     }, (error) => {
-      console.error("Error listening to shop changes:", error);
+      console.error("Error listening to user changes:", error);
       setLoading(false);
     });
 
     return () => {
-      unsubscribeShop();
-      if (unsubscribeStaff) unsubscribeStaff();
+      if (unsubscribeUser) unsubscribeUser();
       if (unsubscribeShopDoc) unsubscribeShopDoc();
+      if (unsubscribeAdmin) unsubscribeAdmin();
     };
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, shop, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, userData, userRole, shop, loading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

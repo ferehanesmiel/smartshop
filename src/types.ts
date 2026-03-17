@@ -190,13 +190,12 @@ export interface Branch {
   status: 'active' | 'inactive';
 }
 
-export interface Staff {
-  staffId: string;
-  shopId: string;
+export interface User {
+  user_id: string;
+  shop_id: string;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'cashier';
-  phone?: string;
-  createdAt: string;
+  role: 'owner' | 'manager' | 'cashier' | 'inventory' | 'accountant';
   status: 'active' | 'inactive';
+  created_at: string;
 }

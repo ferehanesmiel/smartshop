@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, onSnapshot, collection, addDoc, deleteDoc, query, where, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { db, auth } from '../firebase';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential, createUserWithEmailAndPassword } from 'firebase/auth';
+import { db, auth, secondaryAuth } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { useSubscription } from '../SubscriptionContext';
 import { 
@@ -25,7 +25,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { PLANS, PlanType } from '../constants';
-import { Staff } from '../types';
+import { User as UserType } from '../types';
 
 const Settings = () => {
   const { shop } = useAuth();
@@ -34,11 +34,11 @@ const Settings = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
-  const [staff, setStaff] = useState<Staff[]>([]);
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
   const userLimit = getLimit('users');
-  const userLimitReached = isLimitReached('users', staff.length + 1); // +1 for the owner
+  const userLimitReached = isLimitReached('users', users.length + 1); // +1 for the owner
   
   const [formData, setFormData] = useState({
     shopName: '',
@@ -72,11 +72,12 @@ const Settings = () => {
     confirmPassword: ''
   });
 
-  const [staffFormData, setStaffFormData] = useState({
+  const [userFormData, setUserFormData] = useState({
     name: '',
     email: '',
-    role: 'cashier' as 'admin' | 'manager' | 'cashier',
-    phone: ''
+    role: 'cashier' as 'owner' | 'manager' | 'cashier' | 'inventory' | 'accountant',
+    phone: '',
+    password: ''
   });
 
   useEffect(() => {
@@ -105,13 +106,13 @@ const Settings = () => {
   useEffect(() => {
     if (!shop) return;
 
-    const q = query(collection(db, 'staff'), where('shopId', '==', shop.shopId));
+    const q = query(collection(db, 'users'), where('shop_id', '==', shop.shopId));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const staffData = snapshot.docs.map(doc => ({
-        staffId: doc.id,
+      const usersData = snapshot.docs.map(doc => ({
+        user_id: doc.id,
         ...doc.data()
-      })) as Staff[];
-      setStaff(staffData);
+      })) as UserType[];
+      setUsers(usersData);
     });
 
     return () => unsubscribe();
@@ -162,7 +163,7 @@ const Settings = () => {
     }
   };
 
-  const handleAddStaff = async (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shop) return;
 
@@ -175,46 +176,53 @@ const Settings = () => {
     setError(null);
 
     try {
-      await addDoc(collection(db, 'staff'), {
-        ...staffFormData,
-        shopId: shop.shopId,
+      // Create user in Firebase Auth using secondary app
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, userFormData.email, userFormData.password);
+      
+      // Add user to Firestore
+      await addDoc(collection(db, 'users'), {
+        name: userFormData.name,
+        email: userFormData.email,
+        phone: userFormData.phone,
+        role: userFormData.role,
+        shop_id: shop.shopId,
         status: 'active',
-        createdAt: new Date().toISOString()
+        created_at: new Date().toISOString()
       });
       
-      // Increment user count and add email to staffEmails
+      // Increment user count and add email to userEmails
       await updateDoc(doc(db, 'shops', shop.shopId), {
         currentUserCount: increment(1),
-        staffEmails: arrayUnion(staffFormData.email)
+        userEmails: arrayUnion(userFormData.email)
       });
 
-      setIsStaffModalOpen(false);
-      setStaffFormData({ name: '', email: '', role: 'cashier', phone: '' });
+      setIsUserModalOpen(false);
+      setUserFormData({ name: '', email: '', role: 'cashier', phone: '', password: '' });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      console.error('Add staff error:', err);
-      setError('Failed to add staff member.');
+    } catch (err: any) {
+      console.error('Add user error:', err);
+      setError(err.message || 'Failed to add user.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteStaff = async (staffId: string) => {
-    if (window.confirm('Are you sure you want to remove this staff member?')) {
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm('Are you sure you want to remove this user?')) {
       try {
-        await deleteDoc(doc(db, 'staff', staffId));
+        await deleteDoc(doc(db, 'users', userId));
         // Decrement user count and remove email
-        const staffMember = staff.find(s => s.staffId === staffId);
-        if (staffMember) {
+        const userMember = users.find(s => s.user_id === userId);
+        if (userMember) {
           await updateDoc(doc(db, 'shops', shop!.shopId), {
             currentUserCount: increment(-1),
-            staffEmails: arrayRemove(staffMember.email)
+            userEmails: arrayRemove(userMember.email)
           });
         }
       } catch (err) {
-        console.error('Delete staff error:', err);
-        setError('Failed to remove staff member.');
+        console.error('Delete user error:', err);
+        setError('Failed to remove user.');
       }
     }
   };
@@ -691,37 +699,50 @@ const Settings = () => {
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">User Management</h3>
-                  <p className="text-sm text-gray-500">Manage staff accounts and their access permissions.</p>
+                  <p className="text-sm text-gray-500">Manage user accounts and their access permissions.</p>
                 </div>
                 <button 
-                  onClick={() => setIsStaffModalOpen(true)}
-                  className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2"
+                  onClick={() => setIsUserModalOpen(true)}
+                  disabled={userLimitReached}
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Staff
+                  Add User
                 </button>
               </div>
               <div className="p-6">
-                {staff.length === 0 ? (
+                {userLimitReached && (
+                  <div className="mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-bold text-amber-800">User Limit Reached</h4>
+                      <p className="text-sm text-amber-700 mt-1">
+                        You have reached the maximum number of users ({userLimit}) for your current plan. 
+                        Upgrade your plan to add more users.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {users.length === 0 ? (
                   <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                     <User className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h4 className="font-bold text-gray-900">No staff members yet</h4>
-                    <p className="text-sm text-gray-500 mt-1">Start adding staff to help manage your shop.</p>
+                    <h4 className="font-bold text-gray-900">No users yet</h4>
+                    <p className="text-sm text-gray-500 mt-1">Start adding users to help manage your shop.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="text-left border-b border-gray-100">
-                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Staff Member</th>
+                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">User</th>
                           <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
                           <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                           <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {staff.map((member) => (
-                          <tr key={member.staffId} className="group">
+                        {users.map((member) => (
+                          <tr key={member.user_id} className="group">
                             <td className="py-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 font-bold">
@@ -743,7 +764,7 @@ const Settings = () => {
                             </td>
                             <td className="py-4 text-right">
                               <button 
-                                onClick={() => handleDeleteStaff(member.staffId)}
+                                onClick={() => handleDeleteUser(member.user_id)}
                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                               >
                                 <Trash2 className="w-5 h-5" />
@@ -1009,9 +1030,9 @@ const Settings = () => {
         </div>
       </div>
 
-      {/* Staff Modal */}
+      {/* User Modal */}
       <AnimatePresence>
-        {isStaffModalOpen && (
+        {isUserModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -1020,16 +1041,16 @@ const Settings = () => {
               className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
-                <h2 className="text-xl font-bold text-gray-900">Add Staff Member</h2>
+                <h2 className="text-xl font-bold text-gray-900">Add User</h2>
                 <button
-                  onClick={() => setIsStaffModalOpen(false)}
+                  onClick={() => setIsUserModalOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all"
                 >
                   <AlertCircle className="w-6 h-6 text-gray-400 rotate-45" />
                 </button>
               </div>
 
-              <form onSubmit={handleAddStaff} className="p-6 space-y-4 overflow-y-auto">
+              <form onSubmit={handleAddUser} className="p-6 space-y-4 overflow-y-auto">
                 {error && (
                   <div className="p-4 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-sm">
                     <AlertCircle className="w-5 h-5" />
@@ -1043,8 +1064,8 @@ const Settings = () => {
                     <input
                       type="text"
                       required
-                      value={staffFormData.name}
-                      onChange={(e) => setStaffFormData({ ...staffFormData, name: e.target.value })}
+                      value={userFormData.name}
+                      onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                       placeholder="John Doe"
                     />
@@ -1058,8 +1079,8 @@ const Settings = () => {
                     <input
                       type="email"
                       required
-                      value={staffFormData.email}
-                      onChange={(e) => setStaffFormData({ ...staffFormData, email: e.target.value })}
+                      value={userFormData.email}
+                      onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                       placeholder="john@example.com"
                     />
@@ -1072,8 +1093,8 @@ const Settings = () => {
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="tel"
-                      value={staffFormData.phone}
-                      onChange={(e) => setStaffFormData({ ...staffFormData, phone: e.target.value })}
+                      value={userFormData.phone}
+                      onChange={(e) => setUserFormData({ ...userFormData, phone: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                       placeholder="+251..."
                     />
@@ -1081,32 +1102,49 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Temporary Password</label>
+                  <div className="relative">
+                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="password"
+                      required
+                      value={userFormData.password}
+                      onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                      placeholder="••••••••"
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Role</label>
                   <select
-                    value={staffFormData.role}
-                    onChange={(e) => setStaffFormData({ ...staffFormData, role: e.target.value as any })}
+                    value={userFormData.role}
+                    onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value as any })}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   >
-                    <option value="cashier">Cashier</option>
                     <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="inventory">Inventory</option>
+                    <option value="accountant">Accountant</option>
                   </select>
                 </div>
               </form>
               <div className="p-6 border-t border-gray-100 flex gap-3 shrink-0 bg-white">
                 <button
                   type="button"
-                  onClick={() => setIsStaffModalOpen(false)}
+                  onClick={() => setIsUserModalOpen(false)}
                   className="flex-1 px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleAddStaff}
+                  onClick={handleAddUser}
                   disabled={loading}
                   className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
                 >
-                  {loading ? 'Adding...' : 'Add Staff'}
+                  {loading ? 'Adding...' : 'Add User'}
                 </button>
               </div>
             </motion.div>

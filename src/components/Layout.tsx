@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from 'motion/react';
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { shop, isAdmin } = useAuth();
+  const { shop, isAdmin, userRole } = useAuth();
   const { isFeatureAllowed } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -63,21 +63,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const allNavItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { name: 'POS', icon: ShoppingCart, path: '/dashboard/pos' },
-    { name: 'Products', icon: Package, path: '/dashboard/products' },
-    { name: 'Sales', icon: History, path: '/dashboard/sales' },
-    { name: 'Customers', icon: Users, path: '/dashboard/customers' },
-    { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders', feature: 'onlineStore' },
-    { name: 'Branches', icon: Store, path: '/dashboard/branches', feature: 'multiBranch' },
-    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts' },
-    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports', feature: 'advancedReports' },
-    { name: 'Marketplace', icon: Globe, path: '/dashboard/marketplace' },
-    { name: 'Online Orders', icon: ShoppingBag, path: '/dashboard/online-orders' },
-    { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['owner', 'manager', 'cashier', 'inventory', 'accountant'] },
+    { name: 'POS', icon: ShoppingCart, path: '/dashboard/pos', roles: ['owner', 'manager', 'cashier'] },
+    { name: 'Products', icon: Package, path: '/dashboard/products', roles: ['owner', 'manager', 'inventory'] },
+    { name: 'Sales', icon: History, path: '/dashboard/sales', roles: ['owner', 'manager', 'accountant'] },
+    { name: 'Customers', icon: Users, path: '/dashboard/customers', roles: ['owner', 'manager'] },
+    { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders', feature: 'onlineStore', roles: ['owner', 'manager'] },
+    { name: 'Branches', icon: Store, path: '/dashboard/branches', feature: 'multiBranch', roles: ['owner'] },
+    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts', roles: ['owner', 'manager', 'accountant'] },
+    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports', feature: 'advancedReports', roles: ['owner', 'manager', 'accountant'] },
+    { name: 'Marketplace', icon: Globe, path: '/dashboard/marketplace', roles: ['owner', 'manager'] },
+    { name: 'Online Orders', icon: ShoppingBag, path: '/dashboard/online-orders', roles: ['owner', 'manager'] },
+    { name: 'Settings', icon: Settings, path: '/dashboard/settings', roles: ['owner'] },
   ];
 
-  const navItems = allNavItems.filter(item => !item.feature || isFeatureAllowed(item.feature as any));
+  const navItems = allNavItems.filter(item => 
+    (!item.feature || isFeatureAllowed(item.feature as any)) &&
+    (!item.roles || (userRole && item.roles.includes(userRole)))
+  );
 
   if (isAdmin) {
     navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin', feature: '' });
