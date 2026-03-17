@@ -54,6 +54,7 @@ const MarketplaceCheckout = () => {
             shopId: item.shopId
           })),
           totalAmount: shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          commissionAmount: shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.03,
           status: 'pending',
           paymentMethod: formData.paymentMethod,
           paymentStatus: 'pending',

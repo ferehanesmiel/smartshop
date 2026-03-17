@@ -28,6 +28,23 @@ const MarketplaceShop = () => {
         
         if (!shopSnapshot.empty) {
           const shopData = shopSnapshot.docs[0].data() as Shop;
+          
+          let isExpired = false;
+          if (shopData.subscriptionExpiryDate) {
+            const expiryDate = new Date(shopData.subscriptionExpiryDate);
+            if (new Date() > expiryDate) {
+              isExpired = true;
+            }
+          }
+          if (shopData.subscriptionStatus === 'expired') {
+            isExpired = true;
+          }
+
+          if (!shopData.isMarketplaceEnabled || isExpired) {
+            setShop(null);
+            return;
+          }
+
           setShop(shopData);
           
           // Fetch shop products

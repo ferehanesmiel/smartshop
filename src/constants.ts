@@ -3,10 +3,10 @@ export const PLANS = {
     name: 'Basic',
     price: 300,
     limits: {
-      users: 2,
-      products: 500,
+      users: 1,
+      products: 200,
       branches: 1,
-      marketplaceProducts: 10,
+      marketplaceProducts: 0,
     },
     features: {
       multiBranch: false,
@@ -14,17 +14,18 @@ export const PLANS = {
       onlineStore: false,
       smsNotifications: false,
       discounts: false,
+      marketplace: false,
     },
     description: 'Perfect for small shops starting out.',
   },
   pro: {
     name: 'Pro',
-    price: 600,
+    price: 700,
     limits: {
       users: 5,
-      products: 3000,
+      products: 2000,
       branches: 1,
-      marketplaceProducts: 50,
+      marketplaceProducts: 2000,
     },
     features: {
       multiBranch: false,
@@ -32,12 +33,13 @@ export const PLANS = {
       onlineStore: true,
       smsNotifications: true,
       discounts: true,
+      marketplace: true,
     },
     description: 'Best for growing businesses needing more insights.',
   },
   premium: {
     name: 'Premium',
-    price: 1000,
+    price: 1500,
     limits: {
       users: Infinity,
       products: Infinity,
@@ -50,6 +52,7 @@ export const PLANS = {
       onlineStore: true,
       smsNotifications: true,
       discounts: true,
+      marketplace: true,
     },
     description: 'Full power for large enterprises with multiple locations.',
   },

@@ -13,7 +13,10 @@ import {
   BarChart3,
   Receipt as ReceiptIcon,
   Menu,
-  X as CloseIcon
+  X as CloseIcon,
+  Globe,
+  ShoppingBag,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { useSubscription } from '../SubscriptionContext';
@@ -27,6 +30,32 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { shop, isAdmin } = useAuth();
   const { isFeatureAllowed } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const getDaysUntilExpiry = () => {
+    if (!shop?.subscriptionExpiryDate) return null;
+    const expiryDate = new Date(shop.subscriptionExpiryDate);
+    const now = new Date();
+    const diffTime = expiryDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const isSubscriptionActive = () => {
+    if (!shop) return false;
+    if (shop.subscriptionStatus === 'expired') return false;
+    
+    if (shop.subscriptionExpiryDate) {
+      const expiryDate = new Date(shop.subscriptionExpiryDate);
+      if (new Date() > expiryDate) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const isExpired = !isSubscriptionActive();
+  const daysUntilExpiry = getDaysUntilExpiry();
+  const showExpiryWarning = !isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 3 && daysUntilExpiry > 0;
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -43,6 +72,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'Branches', icon: Store, path: '/dashboard/branches', feature: 'multiBranch' },
     { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts' },
     { name: 'Reports', icon: BarChart3, path: '/dashboard/reports', feature: 'advancedReports' },
+    { name: 'Marketplace', icon: Globe, path: '/dashboard/marketplace' },
+    { name: 'Online Orders', icon: ShoppingBag, path: '/dashboard/online-orders' },
     { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
@@ -182,8 +213,41 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <main className="flex-1 overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 flex flex-col">
+        {isExpired && (
+          <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between z-10">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <p className="text-sm text-red-800 font-bold">
+                Your subscription has expired. Access to POS, new products, and marketplace selling is disabled.
+              </p>
+            </div>
+            <Link 
+              to="/subscription" 
+              className="text-sm font-bold text-white hover:bg-red-700 bg-red-600 px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4 shadow-sm"
+            >
+              Renew Now
+            </Link>
+          </div>
+        )}
+        {showExpiryWarning && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-between z-10">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <p className="text-sm text-amber-800 font-medium">
+                Your subscription expires in {daysUntilExpiry} {daysUntilExpiry === 1 ? 'day' : 'days'}. 
+                Please renew to avoid service interruption.
+              </p>
+            </div>
+            <Link 
+              to="/subscription" 
+              className="text-sm font-bold text-amber-700 hover:text-amber-800 bg-amber-100 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
+            >
+              Renew Now
+            </Link>
+          </div>
+        )}
+        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
           {children}
         </div>
       </main>

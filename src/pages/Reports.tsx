@@ -68,7 +68,7 @@ const Reports = () => {
   const [filterPayment, setFilterPayment] = useState('');
   const [filterCashier, setFilterCashier] = useState('');
 
-  const hasAccess = isFeatureAllowed('advanced-reports');
+  const hasAccess = isFeatureAllowed('advancedReports');
 
   useEffect(() => {
     if (!shop || !hasAccess) {

@@ -42,22 +42,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!user) return;
 
+    let unsubscribeStaff: (() => void) | undefined;
+    let unsubscribeShopDoc: (() => void) | undefined;
+
     const shopsRef = collection(db, 'shops');
     const q = query(shopsRef, where('ownerUid', '==', user.uid));
     
-    const unsubscribeShop = onSnapshot(q, (querySnapshot) => {
+    const unsubscribeShop = onSnapshot(q, async (querySnapshot) => {
       if (!querySnapshot.empty) {
         setShop({ shopId: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as Shop);
+        setLoading(false);
       } else {
-        setShop(null);
+        // Check if user is a staff member
+        const staffRef = collection(db, 'staff');
+        const staffQ = query(staffRef, where('email', '==', user.email));
+        
+        unsubscribeStaff = onSnapshot(staffQ, (staffSnapshot) => {
+          if (!staffSnapshot.empty) {
+            const staffData = staffSnapshot.docs[0].data();
+            // Fetch the shop this staff member belongs to
+            const shopDocRef = doc(db, 'shops', staffData.shopId);
+            unsubscribeShopDoc = onSnapshot(shopDocRef, (shopDoc) => {
+              if (shopDoc.exists()) {
+                setShop({ shopId: shopDoc.id, ...shopDoc.data() } as Shop);
+              } else {
+                setShop(null);
+              }
+              setLoading(false);
+            });
+          } else {
+            setShop(null);
+            setLoading(false);
+          }
+        }, (error) => {
+          console.error("Error listening to staff changes:", error);
+          setLoading(false);
+        });
       }
-      setLoading(false);
     }, (error) => {
       console.error("Error listening to shop changes:", error);
       setLoading(false);
     });
 
-    return () => unsubscribeShop();
+    return () => {
+      unsubscribeShop();
+      if (unsubscribeStaff) unsubscribeStaff();
+      if (unsubscribeShopDoc) unsubscribeShopDoc();
+    };
   }, [user]);
 
   return (

@@ -68,8 +68,8 @@ const OnlineOrders = () => {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
-      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.customerName && order.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       order.customerPhone.includes(searchTerm);
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
@@ -150,7 +150,7 @@ const OnlineOrders = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-900">Order {order.orderNumber}</h3>
+                      <h3 className="font-bold text-gray-900">Order #{order.orderId.slice(-6).toUpperCase()}</h3>
                       <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase", getStatusColor(order.status))}>
                         {order.status}
                       </span>

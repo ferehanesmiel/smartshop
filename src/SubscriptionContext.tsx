@@ -18,10 +18,23 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
   const planKey: PlanType = (shop?.plan && PLANS[shop.plan as PlanType]) ? (shop.plan as PlanType) : 'basic';
   const currentPlan = PLANS[planKey];
 
-  const isSubscriptionActive = shop?.subscriptionStatus === 'active' || shop?.subscriptionStatus === 'trial';
+  const isSubscriptionActive = () => {
+    if (!shop) return false;
+    if (shop.subscriptionStatus === 'expired') return false;
+    
+    if (shop.subscriptionExpiryDate) {
+      const expiryDate = new Date(shop.subscriptionExpiryDate);
+      if (new Date() > expiryDate) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const isActive = isSubscriptionActive();
 
   const isFeatureAllowed = (feature: keyof typeof PLANS.basic.features) => {
-    if (!isSubscriptionActive) return false;
+    if (!isActive) return false;
     return currentPlan.features[feature];
   };
 
@@ -39,7 +52,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       isFeatureAllowed, 
       isLimitReached, 
       getLimit,
-      isSubscriptionActive,
+      isSubscriptionActive: isActive,
       plan: planKey
     }}>
       {children}

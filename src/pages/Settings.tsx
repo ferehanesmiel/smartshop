@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, onSnapshot, collection, addDoc, deleteDoc, query, where, increment } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, collection, addDoc, deleteDoc, query, where, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import { useAuth } from '../AuthContext';
@@ -18,7 +18,8 @@ import {
   Plus,
   Trash2,
   Mail,
-  Lock
+  Lock,
+  Globe
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -116,6 +117,27 @@ const Settings = () => {
     return () => unsubscribe();
   }, [shop]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+      setError('Image size must be less than 1MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      if (type === 'logo') {
+        setFormData(prev => ({ ...prev, logoUrl: base64String }));
+      } else {
+        setFormData(prev => ({ ...prev, bannerUrl: base64String }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleUpdateShop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shop) return;
@@ -160,9 +182,10 @@ const Settings = () => {
         createdAt: new Date().toISOString()
       });
       
-      // Increment user count
+      // Increment user count and add email to staffEmails
       await updateDoc(doc(db, 'shops', shop.shopId), {
-        currentUserCount: increment(1)
+        currentUserCount: increment(1),
+        staffEmails: arrayUnion(staffFormData.email)
       });
 
       setIsStaffModalOpen(false);
@@ -181,10 +204,14 @@ const Settings = () => {
     if (window.confirm('Are you sure you want to remove this staff member?')) {
       try {
         await deleteDoc(doc(db, 'staff', staffId));
-        // Decrement user count
-        await updateDoc(doc(db, 'shops', shop!.shopId), {
-          currentUserCount: increment(-1)
-        });
+        // Decrement user count and remove email
+        const staffMember = staff.find(s => s.staffId === staffId);
+        if (staffMember) {
+          await updateDoc(doc(db, 'shops', shop!.shopId), {
+            currentUserCount: increment(-1),
+            staffEmails: arrayRemove(staffMember.email)
+          });
+        }
       } catch (err) {
         console.error('Delete staff error:', err);
         setError('Failed to remove staff member.');
@@ -287,6 +314,7 @@ const Settings = () => {
     { id: 'users', label: 'User Management', icon: User },
     { id: 'branches', label: 'Branches', icon: MapPin, link: '/dashboard/branches' },
     { id: 'subscription', label: 'Subscription', icon: CreditCard },
+    { id: 'marketplace', label: 'Marketplace', icon: Globe },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
   ];
@@ -407,24 +435,64 @@ const Settings = () => {
                     </select>
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Logo URL</label>
-                    <input
-                      type="url"
-                      value={formData.logoUrl}
-                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                      placeholder="https://example.com/logo.png"
-                    />
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Logo</label>
+                    <div className="flex items-center gap-4">
+                      {formData.logoUrl && (
+                        <img 
+                          src={formData.logoUrl} 
+                          alt="Logo Preview" 
+                          className="w-16 h-16 rounded-xl object-cover border border-gray-200"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'logo')}
+                          className="hidden"
+                          id="logo-upload"
+                        />
+                        <label
+                          htmlFor="logo-upload"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 cursor-pointer transition-all"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {formData.logoUrl ? 'Change Logo' : 'Upload Logo'}
+                        </label>
+                        <p className="text-[10px] text-gray-400 mt-1">Max size: 1MB. Recommended: 512x512px</p>
+                      </div>
+                    </div>
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Banner URL (Marketplace)</label>
-                    <input
-                      type="url"
-                      value={formData.bannerUrl}
-                      onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                      placeholder="https://example.com/banner.png"
-                    />
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marketplace Banner</label>
+                    <div className="space-y-4">
+                      {formData.bannerUrl && (
+                        <img 
+                          src={formData.bannerUrl} 
+                          alt="Banner Preview" 
+                          className="w-full h-32 rounded-xl object-cover border border-gray-200"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'banner')}
+                          className="hidden"
+                          id="banner-upload"
+                        />
+                        <label
+                          htmlFor="banner-upload"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 cursor-pointer transition-all"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {formData.bannerUrl ? 'Change Banner' : 'Upload Banner'}
+                        </label>
+                        <p className="text-[10px] text-gray-400 mt-1">Max size: 1MB. Recommended: 1200x400px</p>
+                      </div>
+                    </div>
                   </div>
                   <div className="sm:col-span-2 flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
                     <input
@@ -456,18 +524,15 @@ const Settings = () => {
                       id="marketplaceEnabled"
                       checked={formData.isMarketplaceEnabled}
                       onChange={(e) => setFormData({ ...formData, isMarketplaceEnabled: e.target.checked })}
-                      disabled={shop?.plan !== 'premium'}
-                      className="w-5 h-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 disabled:opacity-50"
+                      className="w-5 h-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
                     />
                     <div className="flex flex-col">
-                      <label htmlFor="marketplaceEnabled" className={cn("text-sm font-bold text-emerald-900", shop?.plan !== 'premium' ? "opacity-50" : "cursor-pointer")}>
+                      <label htmlFor="marketplaceEnabled" className="text-sm font-bold text-emerald-900 cursor-pointer">
                         Enable Marketplace Selling
                       </label>
-                      {shop?.plan !== 'premium' && (
-                        <span className="text-xs text-emerald-700 mt-1">
-                          Available on Premium plan. Upgrade to start selling online.
-                        </span>
-                      )}
+                      <p className="text-xs text-emerald-700 mt-1">
+                        Show your shop and products in the global SmartShop Marketplace.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -751,6 +816,82 @@ const Settings = () => {
             </motion.div>
           )}
 
+          {activeTab === 'marketplace' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-gray-900">Marketplace Settings</h3>
+                <p className="text-sm text-gray-500">Manage your shop's presence on the global SmartShop Marketplace.</p>
+              </div>
+              <div className="p-6 space-y-8">
+                <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div>
+                    <h4 className="font-bold text-emerald-900">Enable Marketplace Selling</h4>
+                    <p className="text-xs text-emerald-700">Show your shop and products in the global marketplace</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isMarketplaceEnabled: !formData.isMarketplaceEnabled })}
+                    className={cn(
+                      "w-12 h-6 rounded-full transition-all relative",
+                      formData.isMarketplaceEnabled ? "bg-emerald-600" : "bg-gray-200"
+                    )}
+                  >
+                    <div className={cn(
+                      "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                      formData.isMarketplaceEnabled ? "right-1" : "left-1"
+                    )} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marketplace Description</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all resize-none h-32"
+                      placeholder="Describe your shop for marketplace customers..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marketplace Category</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                      >
+                        <option value="">Select Category</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Groceries">Groceries</option>
+                        <option value="Home Goods">Home Goods</option>
+                        <option value="Pharmacy">Pharmacy</option>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <button
+                    onClick={handleUpdateShop}
+                    disabled={loading}
+                    className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50"
+                  >
+                    {loading ? 'Saving...' : 'Save Marketplace Settings'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === 'notifications' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -876,9 +1017,9 @@ const Settings = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
             >
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
                 <h2 className="text-xl font-bold text-gray-900">Add Staff Member</h2>
                 <button
                   onClick={() => setIsStaffModalOpen(false)}
@@ -888,7 +1029,13 @@ const Settings = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleAddStaff} className="p-6 space-y-4">
+              <form onSubmit={handleAddStaff} className="p-6 space-y-4 overflow-y-auto">
+                {error && (
+                  <div className="p-4 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-sm">
+                    <AlertCircle className="w-5 h-5" />
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
                   <div className="relative">
@@ -945,24 +1092,23 @@ const Settings = () => {
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-
-                <div className="pt-4 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsStaffModalOpen(false)}
-                    className="flex-1 px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
-                  >
-                    {loading ? 'Adding...' : 'Add Staff'}
-                  </button>
-                </div>
               </form>
+              <div className="p-6 border-t border-gray-100 flex gap-3 shrink-0 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setIsStaffModalOpen(false)}
+                  className="flex-1 px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddStaff}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
+                >
+                  {loading ? 'Adding...' : 'Add Staff'}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

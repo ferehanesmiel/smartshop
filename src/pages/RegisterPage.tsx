@@ -67,7 +67,7 @@ const RegisterPage = () => {
         phone: formData.phone,
         email: formData.email,
         plan: selectedPlan,
-        subscriptionStatus: 'active',
+        subscriptionStatus: 'trial',
         subscriptionStartDate: now.toISOString(),
         subscriptionExpiryDate: expiryDate.toISOString(),
         onlineStoreEnabled: false,

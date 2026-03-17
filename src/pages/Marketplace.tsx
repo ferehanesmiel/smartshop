@@ -15,25 +15,43 @@ const Marketplace = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch featured shops
+        // Fetch featured shops that are active
         const shopsQuery = query(
           collection(db, 'shops'),
           where('isMarketplaceEnabled', '==', true),
-          limit(4)
+          where('subscriptionStatus', 'in', ['active', 'trial']),
+          limit(10)
         );
         const shopsSnapshot = await getDocs(shopsQuery);
         const shopsData = shopsSnapshot.docs.map(doc => doc.data() as Shop);
-        setShops(shopsData);
+        
+        // Filter out expired shops based on expiry date
+        const activeShops = shopsData.filter(shop => {
+          if (shop.subscriptionExpiryDate) {
+            const expiryDate = new Date(shop.subscriptionExpiryDate);
+            if (new Date() > expiryDate) return false;
+          }
+          return true;
+        });
+        
+        setShops(activeShops.slice(0, 4));
 
-        // Fetch featured products
-        const productsQuery = query(
-          collection(db, 'products'),
-          where('isPublishedToMarketplace', '==', true),
-          limit(8)
-        );
-        const productsSnapshot = await getDocs(productsQuery);
-        const productsData = productsSnapshot.docs.map(doc => doc.data() as Product);
-        setProducts(productsData);
+        const activeShopIds = activeShops.map(s => s.shopId);
+
+        if (activeShopIds.length > 0) {
+          // Fetch featured products only from active shops
+          const productsQuery = query(
+            collection(db, 'products'),
+            where('isPublishedToMarketplace', '==', true),
+            where('shopId', 'in', activeShopIds),
+            limit(8)
+          );
+          const productsSnapshot = await getDocs(productsQuery);
+          const productsData = productsSnapshot.docs.map(doc => doc.data() as Product);
+          setProducts(productsData);
+        } else {
+          setProducts([]);
+        }
       } catch (error) {
         console.error('Error fetching marketplace data:', error);
       } finally {

@@ -135,6 +135,7 @@ export interface Order {
   paymentStatus?: 'pending' | 'paid' | 'failed';
   createdAt: string;
   isMarketplaceOrder?: boolean;
+  commissionAmount?: number;
 }
 
 export interface Subscription {

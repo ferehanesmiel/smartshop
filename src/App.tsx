@@ -31,6 +31,7 @@ import AdminSubscriptions from './pages/AdminSubscriptions';
 import AdminRevenue from './pages/AdminRevenue';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
+import SubscriptionPage from './pages/SubscriptionPage';
 import MarketplaceLayout from './components/MarketplaceLayout';
 import Marketplace from './pages/Marketplace';
 import ShopsDirectory from './pages/ShopsDirectory';
@@ -44,8 +45,10 @@ import { CartProvider } from './CartContext';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (!user) return <Navigate to="/login" />;
+
   return <>{children}</>;
 };
 
@@ -66,6 +69,7 @@ export default function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/subscription" element={<SubscriptionPage />} />
               
               {/* Marketplace Routes */}
               <Route element={<MarketplaceLayout />}>
