@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -15,11 +18,11 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: '#' },
-    { name: 'Marketplace', href: '/marketplace' },
-    { name: 'Features', href: '#features' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'Contact', href: '#contact' },
+    { name: t('nav.home'), href: '#' },
+    { name: t('common.marketplace'), href: '/marketplace' },
+    { name: t('nav.features'), href: '#features' },
+    { name: t('nav.pricing'), href: '#pricing' },
+    { name: t('nav.contact'), href: '#contact' },
   ];
 
   return (
@@ -36,27 +39,31 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium text-slate-600 hover:text-brand transition-colors"
-              >
-                {link.name}
-              </a>
-            ))}
+          <div className="hidden md:flex items-center gap-6">
+            <div className="flex items-center gap-8">
+              {navLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-sm font-medium text-slate-600 hover:text-brand transition-colors"
+                >
+                  {link.name}
+                </a>
+              ))}
+            </div>
             <div className="h-6 w-px bg-slate-200 mx-2"></div>
+            <LanguageSwitcher />
             <a href="/login" className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors">
-              Login
+              {t('common.login')}
             </a>
-            <button className="bg-brand hover:bg-brand-hover text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/20 hover:scale-105 active:scale-95">
-              Get Started
-            </button>
+            <a href="/register" className="bg-brand hover:bg-brand-hover text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-brand/20 hover:scale-105 active:scale-95">
+              {t('nav.get_started')}
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden z-[60] relative">
+          <div className="md:hidden z-[60] relative flex items-center gap-4">
+            <LanguageSwitcher />
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 text-slate-600 hover:text-brand transition-colors"
@@ -89,10 +96,10 @@ const Navbar = () => {
               ))}
               <div className="pt-4 flex flex-col gap-3 px-3">
                 <a href="/login" className="text-center py-3 text-base font-semibold text-slate-700 border border-slate-200 rounded-xl" onClick={() => setIsOpen(false)}>
-                  Login
+                  {t('common.login')}
                 </a>
                 <a href="/register" className="bg-brand text-white py-3 rounded-xl text-base font-bold shadow-lg shadow-brand/20 text-center" onClick={() => setIsOpen(false)}>
-                  Get Started
+                  {t('nav.get_started')}
                 </a>
               </div>
             </div>

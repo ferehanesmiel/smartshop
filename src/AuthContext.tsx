@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot, collection, query, where } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { Shop, User } from './types';
 import { handleFirestoreError, OperationType } from './utils/firestoreError';
+import { useTranslation } from 'react-i18next';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -12,6 +13,7 @@ interface AuthContextType {
   shop: Shop | null;
   loading: boolean;
   isAdmin: boolean;
+  updateLanguage: (lng: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,15 +23,29 @@ const AuthContext = createContext<AuthContextType>({
   shop: null,
   loading: true,
   isAdmin: false,
+  updateLanguage: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { i18n } = useTranslation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<User['role'] | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const updateLanguage = async (lng: string) => {
+    i18n.changeLanguage(lng);
+    if (user && userData?.user_id) {
+      try {
+        const userRef = doc(db, 'users', userData.user_id);
+        await updateDoc(userRef, { language: lng });
+      } catch (error) {
+        console.error('Error updating language preference:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -69,6 +85,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const uData = { user_id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
         setUserData(uData);
         setUserRole(uData.role);
+        
+        // Update language if stored in profile
+        if (uData.language && i18n.language !== uData.language) {
+          i18n.changeLanguage(uData.language);
+        }
         
         // Fetch the shop this user belongs to
         const shopDocRef = doc(db, 'shops', uData.shop_id);
@@ -114,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, userData, userRole, shop, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, userData, userRole, shop, loading, isAdmin, updateLanguage }}>
       {children}
     </AuthContext.Provider>
   );

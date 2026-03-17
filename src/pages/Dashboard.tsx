@@ -25,8 +25,10 @@ import { cn } from '../lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { PLANS, PlanType } from '../constants';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const { shop, user, userRole } = useAuth();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -184,7 +186,7 @@ const Dashboard = () => {
     return Object.entries(data).map(([name, amount]) => ({ name, amount }));
   };
 
-  if (loading) return <div className="animate-pulse">Loading dashboard...</div>;
+  if (loading) return <div className="animate-pulse">{t('common.loading')}</div>;
 
   if (!shop) {
     return (
@@ -194,8 +196,8 @@ const Dashboard = () => {
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Store className="text-emerald-600 w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Create Your Shop</h1>
-            <p className="text-gray-500 mt-2">You're almost there! Just a few details to get started.</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('common.create_shop')}</h1>
+            <p className="text-gray-500 mt-2">{t('common.almost_there')}</p>
           </div>
 
           <form onSubmit={handleCreateShop} className="p-8 space-y-6">
@@ -208,7 +210,7 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Shop Name</label>
+                <label className="text-sm font-bold text-gray-700 ml-1">{t('common.shop_name')}</label>
                 <div className="relative">
                   <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -223,7 +225,7 @@ const Dashboard = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Owner Name</label>
+                <label className="text-sm font-bold text-gray-700 ml-1">{t('common.owner_name')}</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -239,7 +241,7 @@ const Dashboard = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 ml-1">Phone Number</label>
+              <label className="text-sm font-bold text-gray-700 ml-1">{t('common.phone_number')}</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -254,7 +256,7 @@ const Dashboard = () => {
             </div>
 
             <div className="space-y-4">
-              <label className="text-sm font-bold text-gray-700 ml-1">Select Package</label>
+              <label className="text-sm font-bold text-gray-700 ml-1">{t('common.select_package')}</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {(Object.keys(PLANS) as PlanType[]).map((p) => (
                   <button
@@ -272,7 +274,7 @@ const Dashboard = () => {
                       <span className="font-bold text-gray-900 capitalize">{PLANS[p].name}</span>
                       {newShopData.plan === p && <CheckCircle2 className="w-5 h-5 text-[#ff6600]" />}
                     </div>
-                    <p className="text-xs text-gray-500">{PLANS[p].price} Birr/mo</p>
+                    <p className="text-xs text-gray-500">{PLANS[p].price} {t('common.currency')}/mo</p>
                   </button>
                 ))}
               </div>
@@ -283,7 +285,7 @@ const Dashboard = () => {
               disabled={isCreatingShop}
               className="w-full bg-[#ff6600] text-white py-5 rounded-2xl font-bold text-lg shadow-lg shadow-orange-200 hover:bg-[#e65c00] transition-all disabled:opacity-50 active:scale-[0.98]"
             >
-              {isCreatingShop ? 'Creating Shop...' : 'Launch My Shop'}
+              {isCreatingShop ? t('common.creating_shop') : t('common.launch_shop')}
             </button>
           </form>
         </div>
@@ -295,8 +297,8 @@ const Dashboard = () => {
 
   if (userRole === 'owner' || userRole === 'manager' || userRole === 'accountant') {
     cards.push({ 
-      title: "Today's Sales", 
-      value: `${stats.todaySales.toLocaleString()} ETB`, 
+      title: t('dashboard.today_sales'), 
+      value: `${stats.todaySales.toLocaleString()} ${t('common.currency')}`, 
       icon: TrendingUp, 
       color: "text-emerald-600", 
       bg: "bg-emerald-50",
@@ -307,14 +309,14 @@ const Dashboard = () => {
 
   if (userRole === 'owner' || userRole === 'manager' || userRole === 'inventory') {
     cards.push({ 
-      title: "Total Products", 
+      title: t('dashboard.total_products'), 
       value: stats.totalProducts, 
       icon: Package, 
       color: "text-blue-600", 
       bg: "bg-blue-50"
     });
     cards.push({ 
-      title: "Low Stock Alerts", 
+      title: t('dashboard.low_stock_alerts'), 
       value: stats.lowStock, 
       icon: AlertTriangle, 
       color: "text-amber-600", 
@@ -325,15 +327,15 @@ const Dashboard = () => {
 
   if (userRole === 'owner' || userRole === 'manager') {
     cards.push({ 
-      title: "Pending Orders", 
+      title: t('dashboard.pending_orders'), 
       value: stats.pendingOrders, 
       icon: ShoppingBag, 
       color: "text-purple-600", 
       bg: "bg-purple-50"
     });
     cards.push({ 
-      title: "Marketplace", 
-      value: shop?.isMarketplaceEnabled ? "Active" : "Inactive", 
+      title: t('common.marketplace'), 
+      value: shop?.isMarketplaceEnabled ? t('common.active') : t('common.inactive'), 
       icon: Store, 
       color: "text-emerald-600", 
       bg: "bg-emerald-50",
@@ -348,8 +350,8 @@ const Dashboard = () => {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-500">Welcome back to {shop?.shopName}</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.revenue_overview')}</h1>
+          <p className="text-gray-500">{t('common.welcome_back')} {shop?.shopName}</p>
         </div>
         
         <div className="flex items-center gap-3 bg-white p-2 pr-4 rounded-2xl shadow-sm border border-gray-100">
@@ -358,13 +360,13 @@ const Dashboard = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Plan</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('common.current_plan')}</span>
               <span className="px-2 py-0.5 bg-[#ff6600] text-white text-[10px] font-bold rounded-full uppercase">
                 {planKey}
               </span>
             </div>
             <p className="text-sm font-bold text-gray-900">
-              {currentPlan.price} Birr / Month
+              {currentPlan.price} {t('common.currency')} / {t('common.month', 'Month')}
             </p>
           </div>
         </div>
@@ -375,13 +377,13 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
             <div className="relative z-10">
-              <h2 className="text-2xl font-bold mb-2">Plan Usage & Limits</h2>
-              <p className="text-gray-400 mb-6">Monitor your resources and upgrade when needed.</p>
+              <h2 className="text-2xl font-bold mb-2">{t('common.usage_limits')}</h2>
+              <p className="text-gray-400 mb-6">{t('common.monitor_resources')}</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Products</span>
+                    <span className="text-gray-400">{t('nav.inventory')}</span>
                     <span className="font-bold">
                       {stats.totalProducts} / {currentPlan.limits.products === Infinity ? '∞' : currentPlan.limits.products}
                     </span>
@@ -398,7 +400,7 @@ const Dashboard = () => {
                 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Users</span>
+                    <span className="text-gray-400">{t('dashboard.total_users')}</span>
                     <span className="font-bold">
                       {stats.totalUsers} / {currentPlan.limits.users === Infinity ? '∞' : currentPlan.limits.users}
                     </span>
@@ -422,16 +424,16 @@ const Dashboard = () => {
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
                 <ArrowUpRight className="w-6 h-6 text-[#ff6600]" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Need More Power?</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('common.need_more_power')}</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Upgrade to Premium for unlimited users, products, and multi-branch support.
+                {t('common.upgrade_premium_desc')}
               </p>
             </div>
             <Link 
               to="/dashboard/settings" 
               className="mt-6 w-full bg-white text-[#ff6600] py-4 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all border border-orange-100 text-center"
             >
-              Upgrade Plan
+              {t('common.upgrade_plan')}
             </Link>
           </div>
         </div>
@@ -487,12 +489,12 @@ const Dashboard = () => {
             <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Revenue Overview</h3>
-                  <p className="text-sm text-gray-500">Sales performance for the last 7 days</p>
+                  <h3 className="text-xl font-bold text-gray-900">{t('dashboard.revenue_overview')}</h3>
+                  <p className="text-sm text-gray-500">{t('common.last_7_days')}</p>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl">
                   <TrendingUp className="w-4 h-4" />
-                  Live Updates
+                  {t('common.live_updates')}
                 </div>
               </div>
               <div className="h-80 w-full">
@@ -519,8 +521,8 @@ const Dashboard = () => {
             {/* Recent Sales */}
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-bold text-gray-900">Recent Sales</h3>
-                <Link to="/dashboard/sales" className="text-sm font-bold text-emerald-600 hover:underline">View All</Link>
+                <h3 className="text-xl font-bold text-gray-900">{t('dashboard.recent_sales')}</h3>
+                <Link to="/dashboard/sales" className="text-sm font-bold text-emerald-600 hover:underline">{t('common.view_all')}</Link>
               </div>
               <div className="space-y-6">
                 {recentSales.map((sale) => (
@@ -535,7 +537,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</p>
+                      <p className="text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} {t('common.currency')}</p>
                       <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{sale.paymentMethod}</p>
                     </div>
                   </div>
@@ -543,7 +545,7 @@ const Dashboard = () => {
                 {recentSales.length === 0 && (
                   <div className="text-center py-12 text-gray-400">
                     <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                    <p>No sales today yet</p>
+                    <p>{t('common.no_sales_today')}</p>
                   </div>
                 )}
               </div>

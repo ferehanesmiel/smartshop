@@ -47,12 +47,14 @@ import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { useTranslation } from 'react-i18next';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 type ReportTab = 'overview' | 'sales' | 'vat' | 'profit' | 'inventory' | 'marketplace';
 
 const Reports = () => {
+  const { t } = useTranslation();
   const { shop } = useAuth();
   const { isFeatureAllowed } = useSubscription();
   const [sales, setSales] = useState<Sale[]>([]);
@@ -244,29 +246,29 @@ const Reports = () => {
         <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
           <Lock className="w-10 h-10 text-[#ff6600]" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Advanced Reports</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('reports.advanced_reports')}</h2>
         <p className="text-gray-500 max-w-md mb-8">
-          Unlock daily, weekly, and monthly analytics, profit & loss reports, and export capabilities with the Pro plan.
+          {t('reports.advanced_reports_desc')}
         </p>
         <Link 
           to="/dashboard/settings" 
           className="bg-[#ff6600] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#e65c00] transition-all shadow-lg shadow-orange-200"
         >
-          Upgrade to Pro
+          {t('reports.upgrade_to_pro')}
         </Link>
       </div>
     );
   }
 
-  if (loading) return <div className="flex items-center justify-center h-64">Loading reports...</div>;
+  if (loading) return <div className="flex items-center justify-center h-64">{t('reports.loading')}</div>;
 
   return (
     <div className="space-y-6 pb-12">
       {/* Header & Global Filters */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reporting & Analytics</h1>
-          <p className="text-gray-500">Comprehensive insights into your business performance</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('reports.title')}</h1>
+          <p className="text-gray-500">{t('reports.subtitle')}</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -309,12 +311,12 @@ const Reports = () => {
       {/* Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {[
-          { id: 'overview', label: 'Overview', icon: PieIcon },
-          { id: 'sales', label: 'Sales', icon: ShoppingCart },
-          { id: 'vat', label: 'VAT', icon: Percent },
-          { id: 'profit', label: 'Profit', icon: TrendingUp },
-          { id: 'inventory', label: 'Inventory', icon: Package },
-          { id: 'marketplace', label: 'Marketplace', icon: Globe },
+          { id: 'overview', label: t('reports.tabs.overview'), icon: PieIcon },
+          { id: 'sales', label: t('reports.tabs.sales'), icon: ShoppingCart },
+          { id: 'vat', label: t('reports.tabs.vat'), icon: Percent },
+          { id: 'profit', label: t('reports.tabs.profit'), icon: TrendingUp },
+          { id: 'inventory', label: t('reports.tabs.inventory'), icon: Package },
+          { id: 'marketplace', label: t('reports.tabs.marketplace'), icon: Globe },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -344,10 +346,10 @@ const Reports = () => {
               {/* Quick Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Total Revenue', value: `${stats.totalRevenue.toLocaleString()} ETB`, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                  { label: 'Total Profit', value: `${stats.totalProfit.toLocaleString()} ETB`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Marketplace Sales', value: `${stats.marketplaceRevenue.toLocaleString()} ETB`, icon: Globe, color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Inventory Value', value: `${stats.inventoryValue.toLocaleString()} ETB`, icon: Package, color: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: t('reports.overview.total_revenue'), value: `${stats.totalRevenue.toLocaleString()} ${t('common.currency')}`, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: t('reports.overview.total_profit'), value: `${stats.totalProfit.toLocaleString()} ${t('common.currency')}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: t('reports.overview.marketplace_sales'), value: `${stats.marketplaceRevenue.toLocaleString()} ${t('common.currency')}`, icon: Globe, color: 'text-purple-600', bg: 'bg-purple-50' },
+                  { label: t('reports.overview.inventory_value'), value: `${stats.inventoryValue.toLocaleString()} ${t('common.currency')}`, icon: Package, color: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map((stat, i) => (
                   <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div className={`w-12 h-12 ${stat.bg} rounded-xl flex items-center justify-center mb-4`}>
@@ -362,7 +364,7 @@ const Reports = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue & Profit Trend */}
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h3 className="text-lg font-bold text-gray-900 mb-6">Revenue vs Profit Trend</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">{t('reports.overview.revenue_vs_profit')}</h3>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={revenueTrendData}>
@@ -389,7 +391,7 @@ const Reports = () => {
 
                 {/* Best Sellers */}
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h3 className="text-lg font-bold text-gray-900 mb-6">Top Selling Products</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">{t('reports.overview.top_selling')}</h3>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={bestSellersData} layout="vertical">
@@ -414,7 +416,7 @@ const Reports = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input 
                     type="text" 
-                    placeholder="Filter by product..."
+                    placeholder={t('reports.sales.filter_product')}
                     value={filterProduct}
                     onChange={(e) => setFilterProduct(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
@@ -425,16 +427,16 @@ const Reports = () => {
                   onChange={(e) => setFilterPayment(e.target.value)}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="">All Payment Methods</option>
-                  <option value="cash">Cash</option>
-                  <option value="mobile">Mobile Money</option>
-                  <option value="card">Card</option>
-                  <option value="telebirr">Telebirr</option>
-                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="">{t('reports.sales.filter_payment')}</option>
+                  <option value="cash">{t('pos.cash')}</option>
+                  <option value="mobile">{t('pos.mobile_money')}</option>
+                  <option value="card">{t('pos.card')}</option>
+                  <option value="telebirr">{t('pos.telebirr')}</option>
+                  <option value="bank_transfer">{t('pos.bank')}</option>
                 </select>
                 <input 
                   type="text" 
-                  placeholder="Filter by cashier..."
+                  placeholder={t('reports.sales.filter_cashier')}
                   value={filterCashier}
                   onChange={(e) => setFilterCashier(e.target.value)}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
@@ -447,13 +449,13 @@ const Reports = () => {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-100">
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Receipt #</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Product Name</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Qty</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Unit Price</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Total</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Payment</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('reports.sales.date')}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('reports.sales.receipt')}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('reports.sales.product_name')}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('reports.sales.qty')}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('reports.sales.unit_price')}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('reports.sales.total')}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('reports.sales.payment')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -473,10 +475,10 @@ const Reports = () => {
                               {item.quantity}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
-                              {item.price.toLocaleString()} ETB
+                              {item.price.toLocaleString()} {t('common.currency')}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">
-                              {(item.quantity * item.price).toLocaleString()} ETB
+                              {(item.quantity * item.price).toLocaleString()} {t('common.currency')}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               {idx === 0 ? (

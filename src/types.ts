@@ -56,6 +56,13 @@ export interface Product {
   productId: string;
   shopId: string;
   name: string;
+  localizedName?: {
+    en?: string;
+    am?: string;
+    om?: string;
+    ti?: string;
+    so?: string;
+  };
   price: number;
   costPrice?: number;
   quantity: number;
@@ -63,6 +70,13 @@ export interface Product {
   barcode?: string;
   imageUrl?: string;
   description?: string;
+  localizedDescription?: {
+    en?: string;
+    am?: string;
+    om?: string;
+    ti?: string;
+    so?: string;
+  };
   createdAt: string;
   slug: string;
   isPublishedToMarketplace?: boolean;
@@ -199,4 +213,5 @@ export interface User {
   role: 'owner' | 'manager' | 'cashier' | 'inventory' | 'accountant';
   status: 'active' | 'inactive';
   created_at: string;
+  language?: string;
 }

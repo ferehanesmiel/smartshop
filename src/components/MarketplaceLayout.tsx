@@ -4,16 +4,19 @@ import { ShoppingCart, Store, Search, User, Menu, X, LayoutDashboard } from 'luc
 import { useCart } from '../CartContext';
 import { useAuth } from '../AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const MarketplaceLayout = () => {
+  const { t } = useTranslation();
   const { totalItems } = useCart();
   const { user, shop } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const location = useLocation();
 
   const navLinks = [
-    { name: 'Home', path: '/marketplace' },
-    { name: 'Shops', path: '/shops' },
+    { name: t('nav.home'), path: '/marketplace' },
+    { name: t('nav.shops') || 'Shops', path: '/shops' },
   ];
 
   return (
@@ -45,6 +48,9 @@ const MarketplaceLayout = () => {
           </div>
 
           <div className="flex items-center gap-3 md:gap-6">
+            <div className="hidden md:block">
+              <LanguageSwitcher />
+            </div>
             <Link to="/marketplace/cart" className="relative p-2 text-gray-500 hover:text-emerald-600 transition-colors">
               <ShoppingCart size={24} />
               {totalItems > 0 && (
@@ -60,7 +66,7 @@ const MarketplaceLayout = () => {
                 className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
               >
                 <LayoutDashboard size={18} />
-                Dashboard
+                {t('common.dashboard')}
               </Link>
             )}
 
@@ -70,7 +76,7 @@ const MarketplaceLayout = () => {
                 className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all"
               >
                 <User size={18} />
-                Seller Login
+                {t('common.login')}
               </Link>
             )}
 
@@ -93,6 +99,9 @@ const MarketplaceLayout = () => {
               className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
             >
               <div className="p-4 space-y-4">
+                <div className="flex justify-center py-2">
+                  <LanguageSwitcher />
+                </div>
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
@@ -109,7 +118,7 @@ const MarketplaceLayout = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className="block py-3 text-center bg-emerald-600 text-white font-bold rounded-xl"
                   >
-                    Dashboard
+                    {t('common.dashboard')}
                   </Link>
                 )}
                 {!user && (
@@ -119,14 +128,14 @@ const MarketplaceLayout = () => {
                       onClick={() => setIsMenuOpen(false)}
                       className="block py-3 text-center bg-gray-100 text-gray-700 font-bold rounded-xl"
                     >
-                      Seller Login
+                      {t('common.login')}
                     </Link>
                     <Link
                       to="/register"
                       onClick={() => setIsMenuOpen(false)}
                       className="block py-3 text-center bg-emerald-600 text-white font-bold rounded-xl"
                     >
-                      Register Shop
+                      {t('nav.get_started')}
                     </Link>
                   </>
                 )}

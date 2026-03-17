@@ -18,8 +18,10 @@ import { Order } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Orders = () => {
+  const { t } = useTranslation();
   const { shop } = useAuth();
   const { isFeatureAllowed } = useSubscription();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -55,15 +57,15 @@ const Orders = () => {
         <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
           <Lock className="w-10 h-10 text-[#ff6600]" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Purchase Orders</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('orders.purchase_orders')}</h2>
         <p className="text-gray-500 max-w-md mb-8">
-          Manage supplier orders, track purchases, and streamline your supply chain with the Pro plan.
+          {t('orders.purchase_orders_desc')}
         </p>
         <Link 
           to="/dashboard/settings" 
           className="bg-[#ff6600] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#e65c00] transition-all shadow-lg shadow-orange-200"
         >
-          Upgrade to Pro
+          {t('reports.upgrade_to_pro')}
         </Link>
       </div>
     );
@@ -87,11 +89,15 @@ const Orders = () => {
     cancelled: "bg-red-100 text-red-700",
   };
 
+  const getStatusLabel = (status: Order['status']) => {
+    return t(`orders.statuses.${status}`);
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Online Orders</h1>
-        <p className="text-gray-500">Manage orders from your marketplace store</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
+        <p className="text-gray-500">{t('orders.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -102,7 +108,7 @@ const Orders = () => {
         ) : orders.length === 0 ? (
           <div className="col-span-full py-20 text-center text-gray-500 bg-white rounded-2xl border border-gray-100">
             <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            <p>No online orders yet</p>
+            <p>{t('orders.no_orders')}</p>
           </div>
         ) : (
           orders.map((order) => (
@@ -117,7 +123,7 @@ const Orders = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className={cn("text-[10px] font-bold uppercase px-2 py-1 rounded-md", statusColors[order.status])}>
-                    {order.status}
+                    {getStatusLabel(order.status)}
                   </span>
                   <span className="text-xs text-gray-400">#{order?.orderId?.slice(0, 8)}</span>
                 </div>
@@ -142,9 +148,9 @@ const Orders = () => {
 
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <p className="text-sm text-gray-600">
-                  <span className="font-bold">{(order.items || order.products)?.length || 0}</span> items
+                  <span className="font-bold">{t('orders.items_count', { count: (order.items || order.products)?.length || 0 })}</span>
                 </p>
-                <p className="text-lg font-bold text-gray-900">{order.totalAmount.toLocaleString()} ETB</p>
+                <p className="text-lg font-bold text-gray-900">{order.totalAmount.toLocaleString()} {t('common.currency')}</p>
               </div>
             </motion.div>
           ))
@@ -168,8 +174,8 @@ const Orders = () => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden"
             >
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
+               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">{t('orders.order_details')}</h2>
                 <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-gray-600">
                   <XCircle className="w-6 h-6" />
                 </button>
@@ -178,14 +184,14 @@ const Orders = () => {
               <div className="p-6 space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Customer</p>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">{t('orders.customer')}</p>
                     <p className="font-bold text-gray-900">{selectedOrder.customerName}</p>
                     <p className="text-sm text-gray-600">{selectedOrder.customerPhone}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Status</p>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">{t('orders.status')}</p>
                     <span className={cn("text-xs font-bold uppercase px-2 py-1 rounded-md inline-block mt-1", statusColors[selectedOrder.status])}>
-                      {selectedOrder.status}
+                      {getStatusLabel(selectedOrder.status)}
                     </span>
                   </div>
                 </div>
@@ -193,7 +199,7 @@ const Orders = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {selectedOrder.customerAddress && (
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Delivery Address</p>
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">{t('orders.delivery_address')}</p>
                       <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 h-full">
                         {selectedOrder.customerAddress}
                       </p>
@@ -201,7 +207,7 @@ const Orders = () => {
                   )}
                   {selectedOrder.paymentMethod && (
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Payment Method</p>
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">{t('orders.payment_method')}</p>
                       <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 h-full uppercase font-bold">
                         {selectedOrder.paymentMethod.replace('_', ' ')}
                       </p>
@@ -210,7 +216,7 @@ const Orders = () => {
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Items</p>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">{t('orders.items')}</p>
                   <div className="space-y-3">
                     {(selectedOrder.items || selectedOrder.products)?.map((item, i) => (
                       <div key={item.productId} className="flex items-center justify-between text-sm">
@@ -224,15 +230,15 @@ const Orders = () => {
                           </div>
                           <span>{item.name} <span className="text-gray-400">x{item.quantity}</span></span>
                         </div>
-                        <span className="font-bold">{(item.price * item.quantity).toLocaleString()} ETB</span>
+                        <span className="font-bold">{(item.price * item.quantity).toLocaleString()} {t('common.currency')}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-100 flex justify-between items-center font-bold text-xl">
-                  <span>Total</span>
-                  <span className="text-emerald-600">{selectedOrder.totalAmount.toLocaleString()} ETB</span>
+                  <span>{t('orders.total')}</span>
+                  <span className="text-emerald-600">{selectedOrder.totalAmount.toLocaleString()} {t('common.currency')}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-4">
@@ -242,13 +248,13 @@ const Orders = () => {
                         onClick={() => updateStatus(selectedOrder.orderId, 'cancelled')}
                         className="px-4 py-3 border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 transition-all"
                       >
-                        Cancel Order
+                        {t('orders.cancel_order')}
                       </button>
                       <button
                         onClick={() => updateStatus(selectedOrder.orderId, 'confirmed')}
                         className="px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                       >
-                        Confirm Order
+                        {t('orders.confirm_order')}
                       </button>
                     </>
                   )}
@@ -257,7 +263,7 @@ const Orders = () => {
                       onClick={() => updateStatus(selectedOrder.orderId, 'shipped')}
                       className="col-span-2 px-4 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200"
                     >
-                      Mark as Shipped
+                      {t('orders.mark_as_shipped')}
                     </button>
                   )}
                   {selectedOrder.status === 'shipped' && (
@@ -265,7 +271,7 @@ const Orders = () => {
                       onClick={() => updateStatus(selectedOrder.orderId, 'delivered')}
                       className="col-span-2 px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                     >
-                      Mark as Delivered
+                      {t('orders.mark_as_delivered')}
                     </button>
                   )}
                 </div>

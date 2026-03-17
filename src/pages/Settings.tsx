@@ -4,6 +4,7 @@ import { updatePassword, EmailAuthProvider, reauthenticateWithCredential, create
 import { db, auth, secondaryAuth } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { useSubscription } from '../SubscriptionContext';
+import { useTranslation } from 'react-i18next';
 import { 
   Store, 
   Phone, 
@@ -28,6 +29,7 @@ import { PLANS, PlanType } from '../constants';
 import { User as UserType } from '../types';
 
 const Settings = () => {
+  const { t } = useTranslation();
   const { shop } = useAuth();
   const { isLimitReached, getLimit, plan: currentPlanKey, isFeatureAllowed } = useSubscription();
   const [loading, setLoading] = useState(false);
@@ -209,21 +211,19 @@ const Settings = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (window.confirm('Are you sure you want to remove this user?')) {
-      try {
-        await deleteDoc(doc(db, 'users', userId));
-        // Decrement user count and remove email
-        const userMember = users.find(s => s.user_id === userId);
-        if (userMember) {
-          await updateDoc(doc(db, 'shops', shop!.shopId), {
-            currentUserCount: increment(-1),
-            userEmails: arrayRemove(userMember.email)
-          });
-        }
-      } catch (err) {
-        console.error('Delete user error:', err);
-        setError('Failed to remove user.');
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      // Decrement user count and remove email
+      const userMember = users.find(s => s.user_id === userId);
+      if (userMember) {
+        await updateDoc(doc(db, 'shops', shop!.shopId), {
+          currentUserCount: increment(-1),
+          userEmails: arrayRemove(userMember.email)
+        });
       }
+    } catch (err) {
+      console.error('Delete user error:', err);
+      setError('Failed to remove user.');
     }
   };
 
@@ -317,21 +317,21 @@ const Settings = () => {
   }));
 
   const menuItems = [
-    { id: 'profile', label: 'Shop Profile', icon: Store },
-    { id: 'vat', label: 'VAT & Profit', icon: CreditCard },
-    { id: 'users', label: 'User Management', icon: User },
-    { id: 'branches', label: 'Branches', icon: MapPin, link: '/dashboard/branches' },
-    { id: 'subscription', label: 'Subscription', icon: CreditCard },
-    { id: 'marketplace', label: 'Marketplace', icon: Globe },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'profile', label: t('settings.tabs.profile'), icon: Store },
+    { id: 'vat', label: t('settings.tabs.vat'), icon: CreditCard },
+    { id: 'users', label: t('settings.tabs.users'), icon: User },
+    { id: 'branches', label: t('settings.tabs.branches'), icon: MapPin, link: '/dashboard/branches' },
+    { id: 'subscription', label: t('settings.tabs.subscription'), icon: CreditCard },
+    { id: 'marketplace', label: t('settings.tabs.marketplace'), icon: Globe },
+    { id: 'notifications', label: t('settings.tabs.notifications'), icon: Bell },
+    { id: 'security', label: t('settings.tabs.security'), icon: Shield },
   ];
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500">Manage your shop profile, preferences, and system configuration</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
+        <p className="text-gray-500">{t('settings.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -372,13 +372,13 @@ const Settings = () => {
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900">Shop Profile</h3>
-                <p className="text-sm text-gray-500">This information will be visible on your digital receipts and online store.</p>
+                <h3 className="text-lg font-bold text-gray-900">{t('settings.profile.title')}</h3>
+                <p className="text-sm text-gray-500">{t('settings.profile.desc')}</p>
               </div>
               <form onSubmit={handleUpdateShop} className="p-6 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Name</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.shop_name')}</label>
                     <div className="relative">
                       <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
@@ -391,7 +391,7 @@ const Settings = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Phone Number</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.phone')}</label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
@@ -404,7 +404,7 @@ const Settings = () => {
                     </div>
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Address</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.address')}</label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
@@ -417,33 +417,33 @@ const Settings = () => {
                     </div>
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Description</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.description')}</label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all resize-none h-24"
-                      placeholder="Tell customers about your shop..."
+                      placeholder={t('settings.profile.description_placeholder')}
                     />
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Category</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.category')}</label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                     >
-                      <option value="">Select a category</option>
-                      <option value="Electronics">Electronics</option>
-                      <option value="Clothing">Clothing</option>
-                      <option value="Groceries">Groceries</option>
-                      <option value="Home Goods">Home Goods</option>
+                      <option value="">{t('settings.profile.select_category')}</option>
+                      <option value="Electronics">{t('marketplace.categories.electronics')}</option>
+                      <option value="Clothing">{t('marketplace.categories.clothing')}</option>
+                      <option value="Groceries">{t('marketplace.categories.groceries')}</option>
+                      <option value="Home Goods">{t('marketplace.categories.home_goods')}</option>
                       <option value="Pharmacy">Pharmacy</option>
                       <option value="Restaurant">Restaurant</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Logo</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.logo')}</label>
                     <div className="flex items-center gap-4">
                       {formData.logoUrl && (
                         <img 
@@ -466,14 +466,14 @@ const Settings = () => {
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 cursor-pointer transition-all"
                         >
                           <Plus className="w-4 h-4" />
-                          {formData.logoUrl ? 'Change Logo' : 'Upload Logo'}
+                          {formData.logoUrl ? t('settings.profile.change_logo') : t('settings.profile.upload_logo')}
                         </label>
-                        <p className="text-[10px] text-gray-400 mt-1">Max size: 1MB. Recommended: 512x512px</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{t('settings.profile.max_size')}. Recommended: 512x512px</p>
                       </div>
                     </div>
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marketplace Banner</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.banner')}</label>
                     <div className="space-y-4">
                       {formData.bannerUrl && (
                         <img 
@@ -496,9 +496,9 @@ const Settings = () => {
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 cursor-pointer transition-all"
                         >
                           <Plus className="w-4 h-4" />
-                          {formData.bannerUrl ? 'Change Banner' : 'Upload Banner'}
+                          {formData.bannerUrl ? t('settings.profile.change_banner') : t('settings.profile.upload_banner')}
                         </label>
-                        <p className="text-[10px] text-gray-400 mt-1">Max size: 1MB. Recommended: 1200x400px</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{t('settings.profile.max_size')}. Recommended: 1200x400px</p>
                       </div>
                     </div>
                   </div>
@@ -518,10 +518,10 @@ const Settings = () => {
                     />
                     <div className="flex flex-col">
                       <label htmlFor="onlineStoreEnabled" className="text-sm font-bold text-emerald-900 cursor-pointer">
-                        Enable Online Store
+                        {t('settings.profile.enable_online_store')}
                       </label>
                       <p className="text-xs text-emerald-700 mt-1">
-                        Turn on your public storefront for customers to browse and order.
+                        {t('settings.profile.enable_online_store_desc')}
                       </p>
                     </div>
                   </div>
@@ -536,10 +536,10 @@ const Settings = () => {
                     />
                     <div className="flex flex-col">
                       <label htmlFor="marketplaceEnabled" className="text-sm font-bold text-emerald-900 cursor-pointer">
-                        Enable Marketplace Selling
+                        {t('settings.profile.enable_marketplace')}
                       </label>
                       <p className="text-xs text-emerald-700 mt-1">
-                        Show your shop and products in the global SmartShop Marketplace.
+                        {t('settings.profile.enable_marketplace_desc')}
                       </p>
                     </div>
                   </div>
@@ -555,7 +555,7 @@ const Settings = () => {
                 {success && (
                   <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl flex items-center gap-2 text-sm">
                     <CheckCircle2 className="w-5 h-5" />
-                    Settings updated successfully!
+                    {t('settings.messages.success')}
                   </div>
                 )}
 
@@ -565,10 +565,10 @@ const Settings = () => {
                     disabled={loading}
                     className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50"
                   >
-                    {loading ? 'Saving...' : (
+                    {loading ? t('common.loading') : (
                       <>
                         <Save className="w-5 h-5" />
-                        Save Changes
+                        {t('common.save')}
                       </>
                     )}
                   </button>
@@ -584,15 +584,15 @@ const Settings = () => {
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900">VAT & Profit Calculation</h3>
-                <p className="text-sm text-gray-500">Configure how taxes and profits are calculated for your shop.</p>
+                <h3 className="text-lg font-bold text-gray-900">{t('settings.vat.title')}</h3>
+                <p className="text-sm text-gray-500">{t('settings.vat.desc')}</p>
               </div>
               <form onSubmit={handleUpdateShop} className="p-6 space-y-8">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <div>
-                      <h4 className="font-bold text-gray-900">Enable VAT Calculation</h4>
-                      <p className="text-xs text-gray-500">Automatically add VAT to sales and receipts</p>
+                      <h4 className="font-bold text-gray-900">{t('settings.vat.enable_vat')}</h4>
+                      <p className="text-xs text-gray-500">{t('settings.vat.enable_vat_desc')}</p>
                     </div>
                     <button
                       type="button"
@@ -612,7 +612,7 @@ const Settings = () => {
                   {formData.isVatEnabled && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">VAT Rate (%)</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.vat.vat_rate')}</label>
                         <input
                           type="number"
                           value={formData.vatRate}
@@ -622,21 +622,21 @@ const Settings = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">VAT Type</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.vat.vat_type')}</label>
                         <select
                           value={formData.vatType}
                           onChange={(e) => setFormData({ ...formData, vatType: e.target.value as 'inclusive' | 'exclusive' })}
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                         >
-                          <option value="exclusive">Exclusive (Add to price)</option>
-                          <option value="inclusive">Inclusive (Included in price)</option>
+                          <option value="exclusive">{t('settings.vat.exclusive')}</option>
+                          <option value="inclusive">{t('settings.vat.inclusive')}</option>
                         </select>
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-4">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Profit Calculation Method</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.vat.profit_method')}</label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
                         type="button"
@@ -646,8 +646,8 @@ const Settings = () => {
                           formData.profitCalculationMethod === 'markup' ? "border-emerald-500 bg-emerald-50" : "border-gray-100 hover:border-emerald-200"
                         )}
                       >
-                        <p className="font-bold text-gray-900">Markup</p>
-                        <p className="text-xs text-gray-500 mt-1">Profit as a percentage of cost price</p>
+                        <p className="font-bold text-gray-900">{t('settings.vat.markup')}</p>
+                        <p className="text-xs text-gray-500 mt-1">{t('settings.vat.markup_desc')}</p>
                       </button>
                       <button
                         type="button"
@@ -657,14 +657,14 @@ const Settings = () => {
                           formData.profitCalculationMethod === 'margin' ? "border-emerald-500 bg-emerald-50" : "border-gray-100 hover:border-emerald-200"
                         )}
                       >
-                        <p className="font-bold text-gray-900">Margin</p>
-                        <p className="text-xs text-gray-500 mt-1">Profit as a percentage of selling price</p>
+                        <p className="font-bold text-gray-900">{t('settings.vat.margin')}</p>
+                        <p className="text-xs text-gray-500 mt-1">{t('settings.vat.margin_desc')}</p>
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Default Currency</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.vat.currency')}</label>
                     <select
                       value={formData.currency}
                       onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
@@ -683,7 +683,7 @@ const Settings = () => {
                     disabled={loading}
                     className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50"
                   >
-                    {loading ? 'Saving...' : 'Save VAT Settings'}
+                    {loading ? t('common.loading') : t('settings.vat.save_vat')}
                   </button>
                 </div>
               </form>
@@ -698,8 +698,8 @@ const Settings = () => {
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">User Management</h3>
-                  <p className="text-sm text-gray-500">Manage user accounts and their access permissions.</p>
+                  <h3 className="text-lg font-bold text-gray-900">{t('settings.users.title')}</h3>
+                  <p className="text-sm text-gray-500">{t('settings.users.desc')}</p>
                 </div>
                 <button 
                   onClick={() => setIsUserModalOpen(true)}
@@ -707,7 +707,7 @@ const Settings = () => {
                   className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-4 h-4" />
-                  Add User
+                  {t('settings.users.add_user')}
                 </button>
               </div>
               <div className="p-6">
@@ -715,10 +715,9 @@ const Settings = () => {
                   <div className="mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-sm font-bold text-amber-800">User Limit Reached</h4>
+                      <h4 className="text-sm font-bold text-amber-800">{t('settings.users.limit_reached')}</h4>
                       <p className="text-sm text-amber-700 mt-1">
-                        You have reached the maximum number of users ({userLimit}) for your current plan. 
-                        Upgrade your plan to add more users.
+                        {t('settings.users.limit_desc', { limit: userLimit })}
                       </p>
                     </div>
                   </div>
@@ -726,18 +725,18 @@ const Settings = () => {
                 {users.length === 0 ? (
                   <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                     <User className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h4 className="font-bold text-gray-900">No users yet</h4>
-                    <p className="text-sm text-gray-500 mt-1">Start adding users to help manage your shop.</p>
+                    <h4 className="font-bold text-gray-900">{t('settings.users.no_users')}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t('settings.users.no_users_desc')}</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="text-left border-b border-gray-100">
-                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">User</th>
-                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
-                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.table.user')}</th>
+                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.table.role')}</th>
+                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.table.status')}</th>
+                          <th className="pb-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">{t('common.actions')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -755,16 +754,22 @@ const Settings = () => {
                               </div>
                             </td>
                             <td className="py-4">
-                              <span className="text-sm font-medium text-gray-600 capitalize">{member.role}</span>
+                              <span className="text-sm font-medium text-gray-600 capitalize">
+                                {t(`settings.users.modal.roles.${member.role}`)}
+                              </span>
                             </td>
                             <td className="py-4">
                               <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold uppercase">
-                                {member.status}
+                                {t(`common.${member.status}`)}
                               </span>
                             </td>
                             <td className="py-4 text-right">
                               <button 
-                                onClick={() => handleDeleteUser(member.user_id)}
+                                onClick={() => {
+                                  if (window.confirm(t('settings.messages.delete_confirm'))) {
+                                    handleDeleteUser(member.user_id);
+                                  }
+                                }}
                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                               >
                                 <Trash2 className="w-5 h-5" />
@@ -828,7 +833,7 @@ const Settings = () => {
                             : "bg-gray-900 text-white hover:bg-gray-800 shadow-md shadow-gray-200"
                         )}
                       >
-                        Upgrade to {plan.name}
+                        {t('common.upgrade_plan')} to {plan.name}
                       </button>
                     )}
                   </div>
@@ -844,14 +849,14 @@ const Settings = () => {
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900">Marketplace Settings</h3>
-                <p className="text-sm text-gray-500">Manage your shop's presence on the global SmartShop Marketplace.</p>
+                <h3 className="text-lg font-bold text-gray-900">{t('settings.tabs.marketplace')}</h3>
+                <p className="text-sm text-gray-500">{t('settings.profile.enable_marketplace_desc')}</p>
               </div>
               <div className="p-6 space-y-8">
                 <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100">
                   <div>
-                    <h4 className="font-bold text-emerald-900">Enable Marketplace Selling</h4>
-                    <p className="text-xs text-emerald-700">Show your shop and products in the global marketplace</p>
+                    <h4 className="font-bold text-emerald-900">{t('settings.profile.enable_marketplace')}</h4>
+                    <p className="text-xs text-emerald-700">{t('settings.profile.enable_marketplace_desc')}</p>
                   </div>
                   <button
                     type="button"
@@ -870,28 +875,28 @@ const Settings = () => {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marketplace Description</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.description')}</label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all resize-none h-32"
-                      placeholder="Describe your shop for marketplace customers..."
+                      placeholder={t('settings.profile.description_placeholder')}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marketplace Category</label>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.profile.category')}</label>
                       <select
                         value={formData.category}
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                       >
-                        <option value="">Select Category</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Clothing">Clothing</option>
-                        <option value="Groceries">Groceries</option>
-                        <option value="Home Goods">Home Goods</option>
+                        <option value="">{t('settings.profile.select_category')}</option>
+                        <option value="Electronics">{t('marketplace.categories.electronics')}</option>
+                        <option value="Clothing">{t('marketplace.categories.clothing')}</option>
+                        <option value="Groceries">{t('marketplace.categories.groceries')}</option>
+                        <option value="Home Goods">{t('marketplace.categories.home_goods')}</option>
                         <option value="Pharmacy">Pharmacy</option>
                         <option value="Restaurant">Restaurant</option>
                         <option value="Other">Other</option>
@@ -906,7 +911,7 @@ const Settings = () => {
                     disabled={loading}
                     className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50"
                   >
-                    {loading ? 'Saving...' : 'Save Marketplace Settings'}
+                    {loading ? t('common.loading') : t('common.save')}
                   </button>
                 </div>
               </div>
@@ -920,14 +925,14 @@ const Settings = () => {
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900">Notification Preferences</h3>
-                <p className="text-sm text-gray-500">Control how you receive updates and alerts.</p>
+                <h3 className="text-lg font-bold text-gray-900">{t('settings.notifications.title')}</h3>
+                <p className="text-sm text-gray-500">{t('settings.notifications.desc')}</p>
               </div>
               <div className="p-6 space-y-4">
                 {Object.entries(notifications).map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-gray-900 capitalize">{key} Notifications</p>
+                      <p className="text-sm font-bold text-gray-900 capitalize">{t(`settings.notifications.${key}`)}</p>
                       <p className="text-xs text-gray-500">Receive alerts about {key} activity</p>
                     </div>
                     <button
@@ -950,7 +955,7 @@ const Settings = () => {
                     disabled={loading}
                     className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
                   >
-                    {loading ? 'Saving...' : 'Save Notification Settings'}
+                    {loading ? t('common.loading') : t('settings.notifications.save')}
                   </button>
                 </div>
               </div>
@@ -964,19 +969,19 @@ const Settings = () => {
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900">Security Settings</h3>
-                <p className="text-sm text-gray-500">Protect your account and shop data.</p>
+                <h3 className="text-lg font-bold text-gray-900">{t('settings.security.title')}</h3>
+                <p className="text-sm text-gray-500">{t('settings.security.desc')}</p>
               </div>
               <div className="p-6 space-y-6">
                 <form onSubmit={handleChangePassword} className="space-y-4">
-                  <h4 className="text-sm font-bold text-gray-900">Change Password</h4>
+                  <h4 className="text-sm font-bold text-gray-900">{t('settings.security.change_password')}</h4>
                   <div className="grid grid-cols-1 gap-4">
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="password"
                         required
-                        placeholder="Current Password"
+                        placeholder={t('settings.security.current_password')}
                         value={securityData.currentPassword}
                         onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -987,7 +992,7 @@ const Settings = () => {
                       <input
                         type="password"
                         required
-                        placeholder="New Password"
+                        placeholder={t('settings.security.new_password')}
                         value={securityData.newPassword}
                         onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -998,7 +1003,7 @@ const Settings = () => {
                       <input
                         type="password"
                         required
-                        placeholder="Confirm New Password"
+                        placeholder={t('settings.security.confirm_password')}
                         value={securityData.confirmPassword}
                         onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -1010,7 +1015,7 @@ const Settings = () => {
                     disabled={loading}
                     className="bg-emerald-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
                   >
-                    {loading ? 'Updating...' : 'Update Password'}
+                    {loading ? t('common.loading') : t('settings.security.change_password')}
                   </button>
                 </form>
 
@@ -1041,7 +1046,7 @@ const Settings = () => {
               className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
-                <h2 className="text-xl font-bold text-gray-900">Add User</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('settings.users.modal.title')}</h2>
                 <button
                   onClick={() => setIsUserModalOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all"
@@ -1058,7 +1063,7 @@ const Settings = () => {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.modal.name')}</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
@@ -1073,7 +1078,7 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.modal.email')}</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
@@ -1088,7 +1093,7 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Phone Number</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.modal.phone')}</label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
@@ -1102,7 +1107,7 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Temporary Password</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.modal.password')}</label>
                   <div className="relative">
                     <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
@@ -1118,16 +1123,16 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Role</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('settings.users.modal.role')}</label>
                   <select
                     value={userFormData.role}
                     onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value as any })}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   >
-                    <option value="manager">Manager</option>
-                    <option value="cashier">Cashier</option>
-                    <option value="inventory">Inventory</option>
-                    <option value="accountant">Accountant</option>
+                    <option value="manager">{t('settings.users.modal.roles.manager')}</option>
+                    <option value="cashier">{t('settings.users.modal.roles.cashier')}</option>
+                    <option value="inventory">{t('settings.users.modal.roles.inventory')}</option>
+                    <option value="accountant">{t('settings.users.modal.roles.accountant')}</option>
                   </select>
                 </div>
               </form>
@@ -1137,14 +1142,14 @@ const Settings = () => {
                   onClick={() => setIsUserModalOpen(false)}
                   className="flex-1 px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleAddUser}
                   disabled={loading}
                   className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
                 >
-                  {loading ? 'Adding...' : 'Add User'}
+                  {loading ? t('common.loading') : t('settings.users.add_user')}
                 </button>
               </div>
             </motion.div>

@@ -23,8 +23,11 @@ import { useSubscription } from '../SubscriptionContext';
 import { auth } from '../firebase';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { shop, isAdmin, userRole } = useAuth();
@@ -63,18 +66,18 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const allNavItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['owner', 'manager', 'cashier', 'inventory', 'accountant'] },
-    { name: 'POS', icon: ShoppingCart, path: '/dashboard/pos', roles: ['owner', 'manager', 'cashier'] },
-    { name: 'Products', icon: Package, path: '/dashboard/products', roles: ['owner', 'manager', 'inventory'] },
-    { name: 'Sales', icon: History, path: '/dashboard/sales', roles: ['owner', 'manager', 'accountant'] },
-    { name: 'Customers', icon: Users, path: '/dashboard/customers', roles: ['owner', 'manager'] },
-    { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders', feature: 'onlineStore', roles: ['owner', 'manager'] },
-    { name: 'Branches', icon: Store, path: '/dashboard/branches', feature: 'multiBranch', roles: ['owner'] },
-    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts', roles: ['owner', 'manager', 'accountant'] },
-    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports', feature: 'advancedReports', roles: ['owner', 'manager', 'accountant'] },
-    { name: 'Marketplace', icon: Globe, path: '/dashboard/marketplace', roles: ['owner', 'manager'] },
-    { name: 'Online Orders', icon: ShoppingBag, path: '/dashboard/online-orders', roles: ['owner', 'manager'] },
-    { name: 'Settings', icon: Settings, path: '/dashboard/settings', roles: ['owner'] },
+    { name: t('common.dashboard'), icon: LayoutDashboard, path: '/dashboard', roles: ['owner', 'manager', 'cashier', 'inventory', 'accountant'] },
+    { name: t('nav.pos'), icon: ShoppingCart, path: '/dashboard/pos', roles: ['owner', 'manager', 'cashier'] },
+    { name: t('nav.inventory'), icon: Package, path: '/dashboard/products', roles: ['owner', 'manager', 'inventory'] },
+    { name: t('nav.sales'), icon: History, path: '/dashboard/sales', roles: ['owner', 'manager', 'accountant'] },
+    { name: t('nav.customers'), icon: Users, path: '/dashboard/customers', roles: ['owner', 'manager'] },
+    { name: t('nav.orders'), icon: ClipboardList, path: '/dashboard/orders', feature: 'onlineStore', roles: ['owner', 'manager'] },
+    { name: t('nav.branches'), icon: Store, path: '/dashboard/branches', feature: 'multiBranch', roles: ['owner'] },
+    { name: t('pos.receipt'), icon: ReceiptIcon, path: '/dashboard/receipts', roles: ['owner', 'manager', 'accountant'] },
+    { name: t('nav.reports'), icon: BarChart3, path: '/dashboard/reports', feature: 'advancedReports', roles: ['owner', 'manager', 'accountant'] },
+    { name: t('common.marketplace'), icon: Globe, path: '/dashboard/marketplace', roles: ['owner', 'manager'] },
+    { name: t('nav.marketplace_dashboard'), icon: ShoppingBag, path: '/dashboard/online-orders', roles: ['owner', 'manager'] },
+    { name: t('common.settings'), icon: Settings, path: '/dashboard/settings', roles: ['owner'] },
   ];
 
   const navItems = allNavItems.filter(item => 
@@ -83,14 +86,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 
   if (isAdmin) {
-    navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin', feature: '', roles: ['owner'] });
+    navItems.push({ name: t('nav.admin_panel'), icon: Store, path: '/admin', feature: '', roles: ['owner'] });
   }
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar (Desktop) */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
-        <div className="p-6">
+        <div className="p-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
               <Store className="text-white w-5 h-5" />
@@ -98,8 +101,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <span className="font-bold text-xl tracking-tight">SmartShop</span>
           </Link>
         </div>
+        
+        <div className="px-6 mb-4">
+          <LanguageSwitcher />
+        </div>
 
-        <nav className="flex-1 px-4 space-y-1">
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <Link
               key={item.path}
@@ -138,7 +145,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            Logout
+            {t('common.logout')}
           </button>
         </div>
       </aside>
@@ -152,6 +159,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <span className="font-bold text-lg tracking-tight">SmartShop</span>
         </Link>
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600">
             {isMobileMenuOpen ? <CloseIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -176,7 +184,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               className="md:hidden fixed top-0 right-0 bottom-0 w-64 bg-white shadow-2xl z-50 flex flex-col"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <span className="font-bold text-lg">Menu</span>
+                <span className="font-bold text-lg">{t('common.menu')}</span>
                 <button onClick={() => setIsMobileMenuOpen(false)}>
                   <CloseIcon className="w-6 h-6 text-gray-400" />
                 </button>
@@ -207,7 +215,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 transition-all"
                 >
                   <LogOut className="w-5 h-5" />
-                  Logout
+                  {t('common.logout')}
                 </button>
               </div>
             </motion.div>
@@ -222,14 +230,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-red-600" />
               <p className="text-sm text-red-800 font-bold">
-                Your subscription has expired. Access to POS, new products, and marketplace selling is disabled.
+                {t('subscription.expired_alert')}
               </p>
             </div>
             <Link 
               to="/subscription" 
               className="text-sm font-bold text-white hover:bg-red-700 bg-red-600 px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4 shadow-sm"
             >
-              Renew Now
+              {t('subscription.renew_now')}
             </Link>
           </div>
         )}
@@ -238,15 +246,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600" />
               <p className="text-sm text-amber-800 font-medium">
-                Your subscription expires in {daysUntilExpiry} {daysUntilExpiry === 1 ? 'day' : 'days'}. 
-                Please renew to avoid service interruption.
+                {t('subscription.expiry_warning', { days: daysUntilExpiry })}
               </p>
             </div>
             <Link 
               to="/subscription" 
               className="text-sm font-bold text-amber-700 hover:text-amber-800 bg-amber-100 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
             >
-              Renew Now
+              {t('subscription.renew_now')}
             </Link>
           </div>
         )}
@@ -278,7 +285,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           )}
         >
           <Menu className="w-6 h-6" />
-          <span className="text-[10px] mt-1 font-medium">More</span>
+          <span className="text-[10px] mt-1 font-medium">{t('common.more')}</span>
         </button>
       </nav>
     </div>

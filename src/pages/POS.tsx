@@ -3,6 +3,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc, increment, setDoc, getD
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { useSubscription } from '../SubscriptionContext';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   ShoppingCart, 
@@ -40,6 +41,7 @@ import jsPDF from 'jspdf';
 const POS = () => {
   const { shop, userData } = useAuth();
   const { isFeatureAllowed, isSubscriptionActive } = useSubscription();
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<SaleItem[]>([]);
@@ -273,7 +275,7 @@ const POS = () => {
       if (customerPhone && isFeatureAllowed('smsNotifications')) {
         sendSMS({
           to: customerPhone,
-          message: `Thank you for shopping at ${shop.shopName}. Your purchase total is ${grandTotal} ETB. Visit again!`,
+          message: t('pos.sms_thank_you', { shopName: shop.shopName, total: grandTotal }),
           shopName: shop.shopName
         });
       }
@@ -300,15 +302,15 @@ const POS = () => {
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-red-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Subscription Expired</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('subscription.expired')}</h2>
         <p className="text-gray-500 max-w-md mb-6">
-          Your subscription has expired. Please renew your subscription to access the Point of Sale system.
+          {t('subscription.expired_desc')}
         </p>
         <Link 
           to="/subscription"
           className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
         >
-          Renew Subscription
+          {t('subscription.renew')}
         </Link>
       </div>
     );
@@ -391,13 +393,13 @@ const POS = () => {
         showCartOnMobile ? "hidden lg:flex" : "flex"
       )}>
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Point of Sale</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('pos.point_of_sale')}</h1>
           <div className="mt-4 relative flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t('pos.search_products')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
@@ -408,7 +410,7 @@ const POS = () => {
               className="bg-emerald-50 text-emerald-600 px-4 py-3 rounded-2xl hover:bg-emerald-100 transition-all flex items-center gap-2 border border-emerald-100"
             >
               <QrCode className="w-5 h-5" />
-              <span className="text-sm font-bold">Scan</span>
+              <span className="text-sm font-bold">{t('pos.scan')}</span>
             </button>
           </div>
         </div>
@@ -434,7 +436,7 @@ const POS = () => {
                 )}
                 {product.quantity <= 0 && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold uppercase">
-                    Out of Stock
+                    {t('pos.out_of_stock')}
                   </div>
                 )}
               </div>
@@ -454,11 +456,11 @@ const POS = () => {
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="text-emerald-600 w-5 h-5" />
-            <h2 className="font-bold text-gray-900">Current Order</h2>
+            <h2 className="font-bold text-gray-900">{t('pos.current_order')}</h2>
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-1 rounded-lg">
-              {cart.length} items
+              {cart.length} {t('pos.items')}
             </span>
             <button 
               onClick={() => setShowCartOnMobile(false)}
@@ -473,7 +475,7 @@ const POS = () => {
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-gray-400 text-center">
                 <ShoppingCart className="w-12 h-12 mb-4 opacity-20" />
-                <p className="text-sm">Your cart is empty.<br/>Select products to start.</p>
+                <p className="text-sm">{t('pos.cart_empty')}<br/>{t('pos.select_products_start')}</p>
               </div>
             ) : (
               cartWithCalculations.map((item) => (
@@ -518,7 +520,7 @@ const POS = () => {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="tel"
-                    placeholder="Phone"
+                    placeholder={t('pos.phone')}
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
@@ -528,7 +530,7 @@ const POS = () => {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Name"
+                    placeholder={t('pos.name')}
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
@@ -546,7 +548,7 @@ const POS = () => {
                 )}
               >
                 <Coins className="w-4 h-4" />
-                <span className="text-[10px] font-bold">Cash</span>
+                <span className="text-[10px] font-bold">{t('pos.cash')}</span>
               </button>
               <button
                 onClick={() => setPaymentMethod('telebirr')}
@@ -556,7 +558,7 @@ const POS = () => {
                 )}
               >
                 <Smartphone className="w-4 h-4" />
-                <span className="text-[10px] font-bold">Telebirr</span>
+                <span className="text-[10px] font-bold">{t('pos.telebirr')}</span>
               </button>
               <button
                 onClick={() => setPaymentMethod('bank_transfer')}
@@ -566,7 +568,7 @@ const POS = () => {
                 )}
               >
                 <Building2 className="w-4 h-4" />
-                <span className="text-[10px] font-bold">Bank</span>
+                <span className="text-[10px] font-bold">{t('pos.bank')}</span>
               </button>
               <button
                 onClick={() => setPaymentMethod('card')}
@@ -576,7 +578,7 @@ const POS = () => {
                 )}
               >
                 <CreditCard className="w-4 h-4" />
-                <span className="text-[10px] font-bold">Card</span>
+                <span className="text-[10px] font-bold">{t('pos.card')}</span>
               </button>
             </div>
 
@@ -586,7 +588,7 @@ const POS = () => {
                   <Coins className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="number"
-                    placeholder="Amount Paid"
+                    placeholder={t('pos.amount_paid')}
                     value={amountPaid}
                     onChange={(e) => setAmountPaid(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
@@ -594,7 +596,7 @@ const POS = () => {
                 </div>
                 {amountPaid && parseFloat(amountPaid) >= grandTotal && (
                   <div className="flex justify-between items-center px-3 py-2 bg-emerald-50 rounded-xl text-emerald-700">
-                    <span className="text-xs font-bold">Change</span>
+                    <span className="text-xs font-bold">{t('pos.change')}</span>
                     <span className="font-bold">{changeAmount.toLocaleString()} ETB</span>
                   </div>
                 )}
@@ -603,18 +605,18 @@ const POS = () => {
 
             <div className="space-y-2 pt-2 border-t border-gray-100 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-gray-500">Subtotal (Net)</span>
+                <span className="text-gray-500">{t('pos.subtotal_net')}</span>
                 <span className="font-medium text-gray-900">{subtotal.toLocaleString()} ETB</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-500">VAT Total</span>
+                <span className="text-gray-500">{t('pos.vat_total')}</span>
                 <span className="font-medium text-gray-900">{totalVat.toLocaleString()} ETB</span>
               </div>
               
               <div className="flex items-center justify-between gap-4">
                 <span className="text-gray-500 flex items-center gap-1">
                   <Tag className="w-3 h-3" />
-                  Discount
+                  {t('pos.discount')}
                 </span>
                 <div className="relative w-24">
                   <input
@@ -636,7 +638,7 @@ const POS = () => {
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span className="text-gray-500 font-medium">Grand Total</span>
+              <span className="text-gray-500 font-medium">{t('pos.grand_total')}</span>
               <span className="text-2xl font-bold text-gray-900">{grandTotal.toLocaleString()} ETB</span>
             </div>
 
@@ -646,7 +648,7 @@ const POS = () => {
               className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Receipt className="w-5 h-5" />
-              Complete Sale
+              {t('pos.complete_sale')}
             </button>
           </div>
       </div>
@@ -679,7 +681,7 @@ const POS = () => {
               className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
               <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-emerald-600 text-white">
-                <h2 className="font-bold">Sale Complete</h2>
+                <h2 className="font-bold">{t('pos.sale_complete')}</h2>
                 <button onClick={() => setIsReceiptOpen(false)} className="hover:bg-white/20 p-1 rounded-lg transition-all">
                   <X className="w-5 h-5" />
                 </button>
@@ -693,27 +695,27 @@ const POS = () => {
                     <p className="text-gray-500">Tel: {shop?.phone}</p>
                     <div className="flex items-center justify-center gap-2 mt-2">
                       <div className="h-px bg-gray-200 flex-1"></div>
-                      <span className="text-[10px] text-gray-400 uppercase tracking-tighter">Official Receipt</span>
+                      <span className="text-[10px] text-gray-400 uppercase tracking-tighter">{t('pos.official_receipt')}</span>
                       <div className="h-px bg-gray-200 flex-1"></div>
                     </div>
                   </div>
 
                   <div className="space-y-1 mb-6">
                     <div className="flex justify-between">
-                      <span>Receipt #:</span>
+                      <span>{t('pos.receipt')} #:</span>
                       <span className="font-bold">{lastSale?.saleId?.slice(0, 8).toUpperCase()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Date:</span>
+                      <span>{t('common.date')}:</span>
                       <span>{new Date(lastSale.createdAt).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Cashier:</span>
+                      <span>{t('pos.cashier')}:</span>
                       <span>{lastSale.cashierName || 'Admin'}</span>
                     </div>
                     {lastSale.customerPhone && (
                       <div className="flex justify-between">
-                        <span>Customer:</span>
+                        <span>{t('pos.customer')}:</span>
                         <span>{lastSale.customerPhone}</span>
                       </div>
                     )}
@@ -722,11 +724,11 @@ const POS = () => {
                   <table className="w-full mb-6">
                     <thead>
                       <tr className="border-b border-gray-200 text-left">
-                        <th className="pb-2">Item</th>
-                        <th className="pb-2 text-center">Qty</th>
-                        <th className="pb-2 text-right">Price</th>
-                        <th className="pb-2 text-right">VAT</th>
-                        <th className="pb-2 text-right">Total</th>
+                        <th className="pb-2">{t('pos.item')}</th>
+                        <th className="pb-2 text-center">{t('pos.qty')}</th>
+                        <th className="pb-2 text-right">{t('pos.price')}</th>
+                        <th className="pb-2 text-right">{t('pos.vat')}</th>
+                        <th className="pb-2 text-right">{t('pos.total')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -744,38 +746,38 @@ const POS = () => {
 
                   <div className="space-y-1 border-t border-gray-200 pt-4">
                     <div className="flex justify-between">
-                      <span>Subtotal (Net Sales):</span>
+                      <span>{t('pos.subtotal_net')}:</span>
                       <span>{lastSale.subtotal?.toFixed(2)} ETB</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Total VAT:</span>
+                      <span>{t('pos.vat_total')}:</span>
                       <span>{lastSale.vatAmount?.toFixed(2)} ETB</span>
                     </div>
                     {lastSale.discount > 0 && (
                       <div className="flex justify-between text-red-600">
-                        <span>Discount:</span>
+                        <span>{t('pos.discount')}:</span>
                         <span>-{lastSale.discount?.toFixed(2)} ETB</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm font-bold pt-2 border-t border-gray-100">
-                      <span>Grand Total:</span>
+                      <span>{t('pos.grand_total')}:</span>
                       <span>{lastSale.totalAmount.toFixed(2)} ETB</span>
                     </div>
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-gray-200 space-y-1">
                     <div className="flex justify-between">
-                      <span className="uppercase">Payment Method:</span>
-                      <span className="font-bold uppercase">{lastSale.paymentMethod}</span>
+                      <span className="uppercase">{t('pos.payment_method')}:</span>
+                      <span className="font-bold uppercase">{t(`pos.${lastSale.paymentMethod}`)}</span>
                     </div>
                     {lastSale.paymentMethod === 'cash' && (
                       <>
                         <div className="flex justify-between">
-                          <span>Amount Paid:</span>
+                          <span>{t('pos.amount_paid')}:</span>
                           <span>{lastSale.amountPaid?.toFixed(2)} ETB</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Change:</span>
+                          <span>{t('pos.change')}:</span>
                           <span className="font-bold">{lastSale.changeAmount?.toFixed(2)} ETB</span>
                         </div>
                       </>
@@ -784,18 +786,23 @@ const POS = () => {
 
                   {/* Owner Only Section */}
                   <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200 print:hidden">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Profit Details (Owner Only)</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">{t('pos.profit_details')}</p>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
-                      <span className="text-gray-500">Cost Total:</span>
+                      <span className="text-gray-500">{t('pos.cost_total')}:</span>
                       <span className="text-right font-bold">{lastSale.totalCost?.toFixed(2)} ETB</span>
-                      <span className="text-gray-500">Net Sales:</span>
+                      <span className="text-gray-500">{t('pos.net_sales')}:</span>
                       <span className="text-right font-bold">{lastSale.subtotal?.toFixed(2)} ETB</span>
-                      <span className="text-gray-500">Total VAT:</span>
+                      <span className="text-gray-500">{t('pos.vat_total')}:</span>
                       <span className="text-right font-bold">{lastSale.vatAmount?.toFixed(2)} ETB</span>
                       <div className="col-span-2 h-px bg-gray-200 my-1"></div>
-                      <span className="text-emerald-600 font-bold">Total Profit:</span>
+                      <span className="text-emerald-600 font-bold">{t('pos.total_profit')}:</span>
                       <span className="text-right text-emerald-600 font-bold">{lastSale.totalProfit?.toFixed(2)} ETB</span>
                     </div>
+                  </div>
+
+                  <div className="mt-8 text-center space-y-2">
+                    <p className="font-bold">{t('pos.thank_you')}</p>
+                    <p className="text-[10px] text-gray-400">{t('pos.powered_by')}</p>
                   </div>
 
                   <div className="mt-8 flex flex-col items-center gap-4">
@@ -808,8 +815,8 @@ const POS = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <p className="font-bold">Thank you for shopping!</p>
-                      <p className="text-[10px] text-gray-400">Powered by SmartShop Ethiopia</p>
+                      <p className="font-bold">{t('pos.thank_you_shopping')}</p>
+                      <p className="text-[10px] text-gray-400">{t('pos.powered_by_smartshop')}</p>
                     </div>
                   </div>
                 </div>
@@ -822,14 +829,14 @@ const POS = () => {
                     className="bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
                   >
                     <Printer className="w-4 h-4" />
-                    Print
+                    {t('common.print')}
                   </button>
                   <button
                     onClick={downloadPDF}
                     className="bg-white text-gray-900 border border-gray-200 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    PDF
+                    {t('common.pdf')}
                   </button>
                   
                   <div className="col-span-2 flex gap-2">
@@ -838,14 +845,14 @@ const POS = () => {
                       className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                     >
                       <Share2 className="w-4 h-4" />
-                      WhatsApp
+                      {t('common.whatsapp')}
                     </button>
                     <button
                       onClick={sendReceiptSMS}
                       className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
                     >
                       <Smartphone className="w-4 h-4" />
-                      SMS
+                      {t('common.sms')}
                     </button>
                   </div>
 
@@ -853,7 +860,7 @@ const POS = () => {
                     onClick={() => setIsReceiptOpen(false)}
                     className="col-span-2 py-2 text-gray-500 font-bold hover:text-gray-900 transition-all text-sm"
                   >
-                    Close & New Sale
+                    {t('pos.close_new_sale')}
                   </button>
                 </div>
               </div>

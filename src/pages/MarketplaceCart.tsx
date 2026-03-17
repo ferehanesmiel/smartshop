@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../CartContext';
 import { ShoppingCart, Trash2, ChevronLeft, ArrowRight, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const MarketplaceCart = () => {
+  const { t } = useTranslation();
   const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -14,12 +16,12 @@ const MarketplaceCart = () => {
         <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
           <ShoppingCart size={48} className="text-emerald-600" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout.cart_empty')}</h1>
         <p className="text-gray-500 mb-8 text-center max-w-xs">
-          Looks like you haven't added anything to your cart yet.
+          {t('checkout.cart_empty_msg')}
         </p>
         <Link to="/marketplace" className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">
-          Start Shopping
+          {t('checkout.start_shopping')}
         </Link>
       </div>
     );
@@ -29,10 +31,10 @@ const MarketplaceCart = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('checkout.cart_title')}</h1>
           <Link to="/marketplace" className="text-emerald-600 font-medium hover:underline flex items-center gap-1">
             <ChevronLeft size={18} />
-            Continue Shopping
+            {t('checkout.continue_shopping')}
           </Link>
         </div>
 
@@ -69,7 +71,7 @@ const MarketplaceCart = () => {
                         <Trash2 size={18} />
                       </button>
                     </div>
-                    <p className="text-emerald-600 font-bold mt-1">{item.price.toLocaleString()} ETB</p>
+                    <p className="text-emerald-600 font-bold mt-1">{item.price.toLocaleString()} {t('common.currency')}</p>
                   </div>
                   
                   <div className="flex items-center justify-between mt-4">
@@ -88,7 +90,7 @@ const MarketplaceCart = () => {
                         +
                       </button>
                     </div>
-                    <p className="font-bold text-gray-900">{(item.price * item.quantity).toLocaleString()} ETB</p>
+                    <p className="font-bold text-gray-900">{(item.price * item.quantity).toLocaleString()} {t('common.currency')}</p>
                   </div>
                 </div>
               </motion.div>
@@ -98,20 +100,20 @@ const MarketplaceCart = () => {
           {/* Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 sticky top-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">{t('checkout.order_summary')}</h2>
               
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-gray-500">
-                  <span>Subtotal ({totalItems} items)</span>
-                  <span>{totalPrice.toLocaleString()} ETB</span>
+                  <span>{t('checkout.subtotal_items', { count: totalItems })}</span>
+                  <span>{totalPrice.toLocaleString()} {t('common.currency')}</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
-                  <span>Delivery Fee</span>
-                  <span className="text-emerald-600 font-medium">Calculated at checkout</span>
+                  <span>{t('checkout.delivery_fee')}</span>
+                  <span className="text-emerald-600 font-medium">{t('checkout.calculated_at_checkout')}</span>
                 </div>
                 <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-900">Total</span>
-                  <span className="text-2xl font-bold text-emerald-600">{totalPrice.toLocaleString()} ETB</span>
+                  <span className="text-lg font-bold text-gray-900">{t('checkout.total')}</span>
+                  <span className="text-2xl font-bold text-emerald-600">{totalPrice.toLocaleString()} {t('common.currency')}</span>
                 </div>
               </div>
               
@@ -119,7 +121,7 @@ const MarketplaceCart = () => {
                 onClick={() => navigate('/marketplace/checkout')}
                 className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
               >
-                Checkout
+                {t('checkout.title')}
                 <ArrowRight size={20} />
               </button>
             </div>
