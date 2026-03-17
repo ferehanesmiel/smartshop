@@ -130,6 +130,12 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (isShopOwner(resource.data.shopId) || isShopStaffWithRole(resource.data.shopId, ['manager', 'accountant']) || isAdmin());
     }
 
+    match /sales/{saleId} {
+      allow read: if isAuthenticated() && (isShopOwner(resource.data.shopId) || isShopStaffWithRole(resource.data.shopId, ['manager', 'accountant', 'cashier']) || isAdmin());
+      allow create: if isAuthenticated() && (isShopOwner(request.resource.data.shopId) || isShopStaffWithRole(request.resource.data.shopId, ['manager', 'cashier']) || isAdmin());
+      allow update: if isAuthenticated() && (isShopOwner(resource.data.shopId) || isShopStaffWithRole(resource.data.shopId, ['manager', 'accountant']) || isAdmin());
+    }
+
     match /receipts/{receiptId} {
       allow read: if true;
       allow create: if isAuthenticated() && (isShopOwner(request.resource.data.shopId) || isShopStaffWithRole(request.resource.data.shopId, ['manager', 'cashier']) || isAdmin());

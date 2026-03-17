@@ -4,7 +4,7 @@ import { doc, onSnapshot, collection, query, where, updateDoc } from 'firebase/f
 import { auth, db } from './firebase';
 import { Shop, User } from './types';
 import { handleFirestoreError, OperationType } from './utils/firestoreError';
-import { useTranslation } from 'react-i18next';
+import i18n from './i18n';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -13,6 +13,7 @@ interface AuthContextType {
   shop: Shop | null;
   loading: boolean;
   isAdmin: boolean;
+  language: string;
   updateLanguage: (lng: string) => Promise<void>;
 }
 
@@ -23,17 +24,28 @@ const AuthContext = createContext<AuthContextType>({
   shop: null,
   loading: true,
   isAdmin: false,
+  language: 'en',
   updateLanguage: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { i18n } = useTranslation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<User['role'] | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [language, setLanguage] = useState(i18n.language);
+
+  useEffect(() => {
+    const handleLanguageChanged = (lng: string) => {
+      setLanguage(lng);
+    };
+    i18n.on('languageChanged', handleLanguageChanged);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, []);
 
   const updateLanguage = async (lng: string) => {
     i18n.changeLanguage(lng);
@@ -139,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, userData, userRole, shop, loading, isAdmin, updateLanguage }}>
+    <AuthContext.Provider value={{ user, userData, userRole, shop, loading, isAdmin, language, updateLanguage }}>
       {children}
     </AuthContext.Provider>
   );

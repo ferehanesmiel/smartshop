@@ -31,6 +31,7 @@ import AdminRevenue from './pages/AdminRevenue';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
 import SubscriptionPage from './pages/SubscriptionPage';
+import POSScanner from './pages/POSScanner';
 import MarketplaceLayout from './components/MarketplaceLayout';
 import Marketplace from './pages/Marketplace';
 import ShopsDirectory from './pages/ShopsDirectory';
@@ -91,6 +92,7 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />
+              <Route path="/pos" element={<POSScanner />} />
               
               {/* Marketplace Routes */}
               <Route element={<MarketplaceLayout />}>

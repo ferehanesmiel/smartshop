@@ -66,12 +66,30 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "customerId", "shopId", "items", "totalAmount"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "POS transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "shopId": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object" } },
+        "totalPrice": { "type": "number" },
+        "vat": { "type": "number" },
+        "profit": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "Telebirr", "Bank Transfer"] },
+        "saleDate": { "type": "string", "format": "date-time" },
+        "cashierId": { "type": "string" }
+      },
+      "required": ["id", "shopId", "items", "totalPrice", "profit", "paymentMethod", "saleDate"]
     }
   },
   "firestore": {
     "/users/{userId}": { "schema": "User", "description": "User profiles" },
     "/shops/{shopId}": { "schema": "Shop", "description": "Store information" },
     "/products/{productId}": { "schema": "Product", "description": "Products in the marketplace" },
-    "/orders/{orderId}": { "schema": "Order", "description": "Customer orders" }
+    "/orders/{orderId}": { "schema": "Order", "description": "Customer orders" },
+    "/sales/{saleId}": { "schema": "Sale", "description": "POS sales transactions" }
   }
 }

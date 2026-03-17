@@ -46,8 +46,39 @@ export interface Shop {
   createdAt: string;
 }
 
-export interface MultiLangString {
-  en: string;
+export interface Product {
+  id: string;
+  shopId: string;
+  name: MultiLangString;
+  description: MultiLangString;
+  price: number;
+  costPrice: number;
+  stock: number;
+  vatInclusive: boolean;
+  category: string;
+  imageUrl?: string;
+  barcode?: string;
+  qrCode?: string;
+  createdAt: string;
+}
+
+export interface Sale {
+  id: string;
+  shopId: string;
+  items: {
+    productId: string;
+    quantity: number;
+    price: number;
+    vat: number;
+    profit: number;
+  }[];
+  totalPrice: number;
+  vat: number;
+  profit: number;
+  paymentMethod: 'Cash' | 'Telebirr' | 'Bank Transfer';
+  saleDate: string;
+  cashierId: string;
+}
   am: string;
   toLowerCase?: () => string;
 }
