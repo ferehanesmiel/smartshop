@@ -37,7 +37,7 @@ const MiniStore = () => {
       if (!querySnapshot.empty) {
         const shopData = { shopId: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as Shop;
         
-        if (!shopData.isMarketplaceEnabled || shopData.status !== 'active' || shopData.subscriptionPlan !== 'premium') {
+        if (!shopData.isMarketplaceEnabled || shopData.status !== 'active' || shopData.plan !== 'premium') {
           setLoading(false);
           return;
         }

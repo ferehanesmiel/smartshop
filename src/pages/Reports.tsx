@@ -25,7 +25,8 @@ import {
   ShoppingCart, 
   Calendar,
   Filter,
-  Lock
+  Lock,
+  CreditCard
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -186,9 +187,13 @@ const Reports = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Total Revenue', value: `${sales.reduce((acc, s) => acc + s.totalAmount, 0).toLocaleString()} ETB`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Total Sales', value: sales.length, icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Total Products', value: products.length, icon: Package, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { label: 'Avg. Sale Value', value: `${(sales.length ? sales.reduce((acc, s) => acc + s.totalAmount, 0) / sales.length : 0).toFixed(0)} ETB`, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Total Profit', value: `${sales.reduce((acc, s) => {
+            const saleCost = s.items.reduce((sum, item) => sum + ((item.costPrice || 0) * item.quantity), 0);
+            const revenueWithoutVat = s.totalAmount - (s.vatAmount || 0);
+            return acc + (revenueWithoutVat - saleCost);
+          }, 0).toLocaleString()} ETB`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Total VAT', value: `${sales.reduce((acc, s) => acc + (s.vatAmount || 0), 0).toLocaleString()} ETB`, icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Total Sales', value: sales.length, icon: ShoppingCart, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map((stat, i) => (
           <motion.div
             key={i}

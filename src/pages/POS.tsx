@@ -91,6 +91,7 @@ const POS = () => {
         productId: product.productId, 
         name: product.name, 
         price: product.price, 
+        costPrice: product.costPrice || 0,
         quantity: 1 
       }];
     });
@@ -114,7 +115,23 @@ const POS = () => {
   };
 
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const total = Math.max(0, subtotal - discount);
+  
+  let vatAmount = 0;
+  let total = 0;
+  const baseAmount = Math.max(0, subtotal - discount);
+
+  if (shop?.isVatEnabled) {
+    const rate = shop.vatRate || 15;
+    if (shop.vatType === 'inclusive') {
+      total = baseAmount;
+      vatAmount = total * (rate / (100 + rate));
+    } else {
+      vatAmount = baseAmount * (rate / 100);
+      total = baseAmount + vatAmount;
+    }
+  } else {
+    total = baseAmount;
+  }
 
   const handleCheckout = async () => {
     if (!shop || cart.length === 0) return;
@@ -125,8 +142,12 @@ const POS = () => {
         productId: item.productId,
         productName: item.name,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
+        costPrice: item.costPrice || 0
       })),
+      subtotal,
+      discount,
+      vatAmount,
       totalAmount: total,
       paymentMethod: 'cash', // Default to cash
       customerPhone,
@@ -176,8 +197,11 @@ const POS = () => {
       const receiptData: Omit<ReceiptType, 'receiptId'> = {
         shopId: shop.shopId,
         saleId: saleId,
-        customerPhone: customerPhone || undefined,
+        customerPhone: customerPhone || null,
         items: saleData.items,
+        subtotal,
+        discount,
+        vatAmount,
         totalAmount: total,
         paymentMethod: saleData.paymentMethod,
         createdAt: saleData.createdAt,
@@ -209,9 +233,29 @@ const POS = () => {
   );
 
   const sendReceiptWhatsApp = () => {
-    if (!lastSale || !customerPhone) return;
-    const message = `Receipt from ${shop?.shopName}\nSale ID: ${lastSale?.saleId?.slice(0, 6)}\nTotal: ${lastSale?.totalAmount} ETB\nThank you for shopping with us!`;
+    if (!lastSale) return;
+    const message = `Receipt from ${shop?.shopName}\nSale ID: ${lastSale?.saleId?.slice(0, 6)}\nSubtotal: ${lastSale.subtotal?.toLocaleString()} ETB\nDiscount: ${lastSale.discount?.toLocaleString()} ETB\nVAT: ${lastSale.vatAmount?.toLocaleString()} ETB\nTotal: ${lastSale.totalAmount.toLocaleString()} ETB\nThank you for shopping with us!`;
     window.open(`https://wa.me/${customerPhone.replace(/\s+/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const sendReceiptTelegram = () => {
+    if (!lastSale) return;
+    const message = `Receipt from ${shop?.shopName}\nSale ID: ${lastSale?.saleId?.slice(0, 6)}\nSubtotal: ${lastSale.subtotal?.toLocaleString()} ETB\nDiscount: ${lastSale.discount?.toLocaleString()} ETB\nVAT: ${lastSale.vatAmount?.toLocaleString()} ETB\nTotal: ${lastSale.totalAmount.toLocaleString()} ETB\nThank you for shopping with us!`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const sendReceiptSMS = () => {
+    if (!lastSale || !customerPhone) return;
+    sendSMS({
+      to: customerPhone,
+      message: `Receipt from ${shop?.shopName}. Total: ${lastSale.totalAmount.toLocaleString()} ETB. Thank you!`,
+      shopName: shop?.shopName || 'SmartShop'
+    });
+    alert('Receipt sent via SMS!');
+  };
+
+  const printReceipt = () => {
+    window.print();
   };
 
   return (
@@ -452,41 +496,89 @@ const POS = () => {
                 <h2 className="text-2xl font-bold text-gray-900">Sale Complete!</h2>
                 <p className="text-gray-500 mt-1">Receipt generated successfully</p>
                 
-                <div className="mt-8 p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-300 text-left">
-                  <div className="flex justify-between text-xs text-gray-500 mb-4">
-                    <span>{new Date(lastSale.createdAt).toLocaleString()}</span>
-                    <span>#{lastSale?.saleId?.slice(0, 6)}</span>
-                  </div>
-                  <div className="space-y-2 mb-4">
-                    {lastSale.items.map((item, i) => (
-                      <div key={item.productId} className="flex justify-between text-sm">
-                        <span>{item.productName} x{item.quantity}</span>
-                        <span className="font-medium">{(item.price * item.quantity).toLocaleString()}</span>
+                  <div className="mt-8 p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-300 text-left print:border-none print:bg-white">
+                    <div className="text-center mb-4 hidden print:block">
+                      <h2 className="text-xl font-bold">{shop?.shopName}</h2>
+                      <p className="text-xs text-gray-500">{shop?.address}</p>
+                      <p className="text-xs text-gray-500">{shop?.phone}</p>
+                      <div className="border-b border-gray-200 my-4"></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mb-4">
+                      <span>{new Date(lastSale.createdAt).toLocaleString()}</span>
+                      <span>#{lastSale?.saleId?.slice(0, 6)}</span>
+                    </div>
+                    <div className="space-y-2 mb-4">
+                      {lastSale.items.map((item, i) => (
+                        <div key={item.productId} className="flex justify-between text-sm">
+                          <span>{item.productName} x{item.quantity}</span>
+                          <span className="font-medium">{(item.price * item.quantity).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-gray-200 pt-4 space-y-1">
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Subtotal</span>
+                        <span>{lastSale.subtotal?.toLocaleString()} ETB</span>
                       </div>
-                    ))}
+                      {lastSale.discount > 0 && (
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>Discount</span>
+                          <span>-{lastSale.discount?.toLocaleString()} ETB</span>
+                        </div>
+                      )}
+                      {lastSale.vatAmount > 0 && (
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>VAT ({shop?.vatRate}%)</span>
+                          <span>{lastSale.vatAmount?.toLocaleString()} ETB</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-100">
+                        <span>Total</span>
+                        <span>{lastSale.totalAmount.toLocaleString()} ETB</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="border-t border-gray-200 pt-4 flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>{lastSale.totalAmount.toLocaleString()} ETB</span>
-                  </div>
-                </div>
 
-                <div className="mt-8 space-y-3">
-                  {customerPhone && (
+                  <div className="mt-8 grid grid-cols-2 gap-3 print:hidden">
                     <button
-                      onClick={sendReceiptWhatsApp}
-                      className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                      onClick={printReceipt}
+                      className="col-span-2 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
                     >
-                      Send via WhatsApp
+                      <Receipt className="w-5 h-5" />
+                      Print Receipt
                     </button>
-                  )}
-                  <button
-                    onClick={() => setIsReceiptOpen(false)}
-                    className="w-full py-3 text-gray-500 font-bold hover:text-gray-900 transition-all"
-                  >
-                    Close
-                  </button>
-                </div>
+                    
+                    {customerPhone && (
+                      <>
+                        <button
+                          onClick={sendReceiptWhatsApp}
+                          className="bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                        >
+                          WhatsApp
+                        </button>
+                        <button
+                          onClick={sendReceiptSMS}
+                          className="bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                        >
+                          SMS
+                        </button>
+                      </>
+                    )}
+                    
+                    <button
+                      onClick={sendReceiptTelegram}
+                      className="col-span-2 bg-sky-500 text-white py-3 rounded-xl font-bold hover:bg-sky-600 transition-all flex items-center justify-center gap-2"
+                    >
+                      Share via Telegram
+                    </button>
+
+                    <button
+                      onClick={() => setIsReceiptOpen(false)}
+                      className="col-span-2 py-3 text-gray-500 font-bold hover:text-gray-900 transition-all"
+                    >
+                      Close
+                    </button>
+                  </div>
               </div>
             </motion.div>
           </div>

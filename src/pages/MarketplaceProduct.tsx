@@ -28,7 +28,7 @@ const MarketplaceProduct = () => {
           const shopDoc = await getDoc(doc(db, 'shops', productData.shopId));
           if (shopDoc.exists()) {
             const shopData = { shopId: shopDoc.id, ...shopDoc.data() } as Shop;
-            if (!shopData.isMarketplaceEnabled || shopData.status !== 'active' || shopData.subscriptionPlan !== 'premium') {
+            if (!shopData.isMarketplaceEnabled || shopData.status !== 'active' || shopData.plan !== 'premium') {
               setProduct(null); // Hide product if shop is inactive
               setLoading(false);
               return;

@@ -14,7 +14,7 @@ export interface Shop {
   phone: string;
   email: string;
   address?: string;
-  subscriptionPlan: 'basic' | 'pro' | 'premium';
+  plan: 'basic' | 'pro' | 'premium';
   status: 'active' | 'suspended';
   createdAt: string;
   ownerUid: string;
@@ -22,6 +22,11 @@ export interface Shop {
   description?: string;
   logoUrl?: string;
   isMarketplaceEnabled?: boolean;
+  isVatEnabled?: boolean;
+  vatRate?: number;
+  vatType?: 'inclusive' | 'exclusive';
+  profitCalculationMethod?: 'markup' | 'margin';
+  currency?: string;
 }
 
 export interface Product {
@@ -29,6 +34,7 @@ export interface Product {
   shopId: string;
   name: string;
   price: number;
+  costPrice?: number;
   quantity: number;
   category: string;
   barcode?: string;
@@ -44,12 +50,16 @@ export interface SaleItem {
   productName: string;
   quantity: number;
   price: number;
+  costPrice?: number;
 }
 
 export interface Sale {
   saleId: string;
   shopId: string;
   items: SaleItem[];
+  subtotal?: number;
+  discount?: number;
+  vatAmount?: number;
   totalAmount: number;
   paymentMethod: 'cash' | 'mobile' | 'card';
   customerPhone?: string;
@@ -114,8 +124,33 @@ export interface Receipt {
   saleId: string;
   customerPhone?: string;
   items: SaleItem[];
+  subtotal?: number;
+  discount?: number;
+  vatAmount?: number;
   totalAmount: number;
   paymentMethod: 'cash' | 'mobile' | 'card';
   createdAt: string;
   shopName: string;
+}
+
+export interface Branch {
+  branchId: string;
+  shopId: string;
+  name: string;
+  address: string;
+  phone: string;
+  managerName: string;
+  createdAt: string;
+  status: 'active' | 'inactive';
+}
+
+export interface Staff {
+  staffId: string;
+  shopId: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'manager' | 'cashier';
+  phone?: string;
+  createdAt: string;
+  status: 'active' | 'inactive';
 }

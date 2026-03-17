@@ -1,5 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 import { 
   Store, 
   ArrowRight, 
@@ -22,6 +23,15 @@ import {
 import { motion } from 'motion/react';
 
 const LandingPage = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/marketplace');
+    }
+  }, [user, loading, navigate]);
+
   const plans = [
     {
       name: 'Basic',

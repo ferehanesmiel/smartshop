@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, Outlet } from 'react-router-dom';
-import { ShoppingCart, Search, Menu, X, Store } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X, Store, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCart } from '../CartContext';
+import { useAuth } from '../AuthContext';
 
 const MarketplaceLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const { cart } = useCart();
+  const { user } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +51,13 @@ const MarketplaceLayout = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-4">
+              {user && (
+                <Link to="/dashboard" className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl font-bold hover:bg-emerald-100 transition-all border border-emerald-100">
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </Link>
+              )}
+
               <Link to="/shops" className="text-sm font-bold text-gray-600 hover:text-emerald-600 hidden sm:block">
                 All Shops
               </Link>
@@ -94,6 +103,16 @@ const MarketplaceLayout = () => {
                   />
                 </form>
                 <div className="flex flex-col gap-2">
+                  {user && (
+                    <Link 
+                      to="/dashboard" 
+                      className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 font-bold rounded-xl"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="w-5 h-5" />
+                      Dashboard
+                    </Link>
+                  )}
                   <Link 
                     to="/shops" 
                     className="px-4 py-2 text-gray-600 font-bold hover:bg-gray-50 rounded-lg"

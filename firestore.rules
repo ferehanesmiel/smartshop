@@ -108,7 +108,7 @@ service cloud.firestore {
     }
 
     match /sales/{saleId} {
-      allow read: if isShopOwner(resource.data.shopId);
+      allow read: if isAdmin() || isShopOwner(resource.data.shopId);
       allow create: if isShopOwner(request.resource.data.shopId);
       allow update: if isShopOwner(resource.data.shopId) && 
                       (request.resource.data.shopId == resource.data.shopId);
@@ -116,7 +116,7 @@ service cloud.firestore {
     }
 
     match /customers/{customerId} {
-      allow read: if isShopOwner(resource.data.shopId);
+      allow read: if isAdmin() || isShopOwner(resource.data.shopId);
       allow create: if isShopOwner(request.resource.data.shopId);
       allow update: if isShopOwner(resource.data.shopId) && 
                       (request.resource.data.shopId == resource.data.shopId);
@@ -124,16 +124,16 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow read: if isShopOwner(resource.data.shopId);
+      allow read: if isAdmin() || isShopOwner(resource.data.shopId);
       allow create: if true; // Public can place orders
-      allow update: if isShopOwner(resource.data.shopId);
-      allow delete: if isShopOwner(resource.data.shopId);
+      allow update: if isAdmin() || isShopOwner(resource.data.shopId);
+      allow delete: if isAdmin() || isShopOwner(resource.data.shopId);
     }
 
     match /receipts/{receiptId} {
-      allow read: if isShopOwner(resource.data.shopId);
+      allow read: if isAdmin() || isShopOwner(resource.data.shopId);
       allow create: if isShopOwner(request.resource.data.shopId);
-      allow update: if isShopOwner(resource.data.shopId);
+      allow update: if isAdmin() || isShopOwner(resource.data.shopId);
       allow delete: if isAdmin();
     }
 

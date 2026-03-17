@@ -56,6 +56,7 @@ const Products = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    costPrice: '',
     quantity: '',
     category: '',
     image: '',
@@ -91,6 +92,7 @@ const Products = () => {
       setFormData({
         name: product.name,
         price: product.price.toString(),
+        costPrice: product.costPrice?.toString() || '',
         quantity: product.quantity.toString(),
         category: product.category,
         image: product.imageUrl || '',
@@ -99,7 +101,7 @@ const Products = () => {
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', price: '', quantity: '', category: '', image: '', description: '', barcode: '' });
+      setFormData({ name: '', price: '', costPrice: '', quantity: '', category: '', image: '', description: '', barcode: '' });
     }
     setIsModalOpen(true);
   };
@@ -111,6 +113,7 @@ const Products = () => {
     const productData = {
       name: formData.name,
       price: parseFloat(formData.price),
+      costPrice: formData.costPrice ? parseFloat(formData.costPrice) : 0,
       quantity: parseInt(formData.quantity),
       category: formData.category,
       imageUrl: formData.image || `https://picsum.photos/seed/${formData.name}/200`,
@@ -186,7 +189,7 @@ const Products = () => {
 
       {/* Search and Filters */}
       <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:row items-center gap-4">
-        <div className="relative flex-1 w-full flex gap-2">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
@@ -195,17 +198,10 @@ const Products = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
           />
-          <button
-            onClick={() => setIsScannerOpen(true)}
-            className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 flex items-center gap-2"
-          >
-            <QrCode className="w-5 h-5" />
-            <span className="text-sm font-bold">Scan</span>
-          </button>
         </div>
       </div>
       
-      {isScannerOpen && <QRScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
+      {isScannerOpen && !isModalOpen && <QRScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
 
       {/* Products Grid */}
       {loading ? (
@@ -237,7 +233,7 @@ const Products = () => {
                     <ImageIcon className="w-12 h-12" />
                   </div>
                 )}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => handleOpenModal(product)}
                     className="p-2 bg-white rounded-lg shadow-md text-blue-600 hover:bg-blue-50"
@@ -309,12 +305,22 @@ const Products = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (ETB)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price (ETB)</label>
                     <input
                       type="number"
                       required
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price (ETB)</label>
+                    <input
+                      type="number"
+                      value={formData.costPrice}
+                      onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                       placeholder="0.00"
                     />
@@ -343,22 +349,35 @@ const Products = () => {
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Barcode / QR Code (Optional)</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={formData.barcode}
-                        onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                        className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                        placeholder="Scan or enter code"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsScannerOpen(true)}
-                        className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100"
-                      >
-                        <QrCode className="w-5 h-5" />
-                      </button>
-                    </div>
+                    {isScannerOpen && isModalOpen ? (
+                      <div className="relative aspect-video bg-black rounded-xl overflow-hidden mb-2">
+                        <QRScanner 
+                          onScan={(code) => {
+                            setFormData(prev => ({ ...prev, barcode: code }));
+                            setIsScannerOpen(false);
+                          }} 
+                          onClose={() => setIsScannerOpen(false)} 
+                          inline
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={formData.barcode}
+                          onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                          className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                          placeholder="Scan or enter code"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsScannerOpen(true)}
+                          className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100"
+                        >
+                          <QrCode className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>

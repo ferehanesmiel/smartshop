@@ -19,6 +19,7 @@ import Orders from './pages/Orders';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Receipts from './pages/Receipts';
+import Branches from './pages/Branches';
 import MiniStore from './pages/MiniStore';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
@@ -131,6 +132,13 @@ export default function App() {
             <ProtectedRoute>
               <Layout>
                 <Receipts />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/branches" element={
+            <ProtectedRoute>
+              <Layout>
+                <Branches />
               </Layout>
             </ProtectedRoute>
           } />
