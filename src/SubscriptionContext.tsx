@@ -8,6 +8,7 @@ interface SubscriptionContextType {
   getLimit: (limit: keyof typeof PLANS.basic.limits) => number;
   isSubscriptionActive: boolean;
   plan: PlanType;
+  currentPlanKey: PlanType;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -15,7 +16,9 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { shop } = useAuth();
 
-  const planKey: PlanType = (shop?.plan && PLANS[shop.plan as PlanType]) ? (shop.plan as PlanType) : 'basic';
+  const planKey: PlanType = (shop?.plan && PLANS[shop.plan.toLowerCase() as PlanType]) 
+    ? (shop.plan.toLowerCase() as PlanType) 
+    : 'basic';
   const currentPlan = PLANS[planKey];
 
   const isSubscriptionActive = () => {
@@ -53,7 +56,8 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       isLimitReached, 
       getLimit,
       isSubscriptionActive: isActive,
-      plan: planKey
+      plan: planKey,
+      currentPlanKey: planKey
     }}>
       {children}
     </SubscriptionContext.Provider>

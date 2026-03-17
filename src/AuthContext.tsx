@@ -77,12 +77,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAdmin(user.email === 'esmielferehan@gmail.com' || adminDoc.exists());
     });
 
-    const usersRef = collection(db, 'users');
-    const userQ = query(usersRef, where('email', '==', user.email));
+    const userDocRef = doc(db, 'users', user.uid);
     
-    unsubscribeUser = onSnapshot(userQ, (userSnapshot) => {
-      if (!userSnapshot.empty) {
-        const uData = { user_id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
+    unsubscribeUser = onSnapshot(userDocRef, (userSnapshot) => {
+      if (userSnapshot.exists()) {
+        const uData = { user_id: userSnapshot.id, ...userSnapshot.data() } as User;
         setUserData(uData);
         setUserRole(uData.role);
         
@@ -92,15 +91,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // Fetch the shop this user belongs to
-        const shopDocRef = doc(db, 'shops', uData.shop_id);
-        unsubscribeShopDoc = onSnapshot(shopDocRef, (shopDoc) => {
-          if (shopDoc.exists()) {
-            setShop({ shopId: shopDoc.id, ...shopDoc.data() } as Shop);
-          } else {
-            setShop(null);
-          }
+        if (uData.shop_id) {
+          const shopDocRef = doc(db, 'shops', uData.shop_id);
+          unsubscribeShopDoc = onSnapshot(shopDocRef, (shopDoc) => {
+            if (shopDoc.exists()) {
+              setShop({ shopId: shopDoc.id, ...shopDoc.data() } as Shop);
+            } else {
+              setShop(null);
+            }
+            setLoading(false);
+          });
+        } else {
+          setShop(null);
           setLoading(false);
-        });
+        }
       } else {
         // Fallback for legacy owners who might not be in the users collection yet
         const shopsRef = collection(db, 'shops');

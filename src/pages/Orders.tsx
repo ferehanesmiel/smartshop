@@ -71,26 +71,26 @@ const Orders = () => {
     );
   }
 
-  const updateStatus = async (orderId: string, status: Order['status']) => {
+  const updateStatus = async (orderId: string, status: Order['orderStatus']) => {
     if (!shop) return;
     try {
-      await updateDoc(doc(db, 'orders', orderId), { status });
+      await updateDoc(doc(db, 'orders', orderId), { orderStatus: status });
       setSelectedOrder(null);
     } catch (err) {
       console.error('Error updating status:', err);
     }
   };
 
-  const statusColors = {
-    pending: "bg-amber-100 text-amber-700",
-    confirmed: "bg-blue-100 text-blue-700",
-    shipped: "bg-purple-100 text-purple-700",
-    delivered: "bg-emerald-100 text-emerald-700",
-    cancelled: "bg-red-100 text-red-700",
+  const statusColors: Record<string, string> = {
+    'Pending': "bg-amber-100 text-amber-700",
+    'Confirmed': "bg-blue-100 text-blue-700",
+    'Shipped': "bg-purple-100 text-purple-700",
+    'Delivered': "bg-emerald-100 text-emerald-700",
+    'Cancelled': "bg-red-100 text-red-700",
   };
 
-  const getStatusLabel = (status: Order['status']) => {
-    return t(`orders.statuses.${status}`);
+  const getStatusLabel = (status: Order['orderStatus']) => {
+    return status;
   };
 
   return (
@@ -122,8 +122,8 @@ const Orders = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <span className={cn("text-[10px] font-bold uppercase px-2 py-1 rounded-md", statusColors[order.status])}>
-                    {getStatusLabel(order.status)}
+                  <span className={cn("text-[10px] font-bold uppercase px-2 py-1 rounded-md", statusColors[order.orderStatus || 'Pending'])}>
+                    {getStatusLabel(order.orderStatus || 'Pending')}
                   </span>
                   <span className="text-xs text-gray-400">#{order?.orderId?.slice(0, 8)}</span>
                 </div>
@@ -190,8 +190,8 @@ const Orders = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">{t('orders.status')}</p>
-                    <span className={cn("text-xs font-bold uppercase px-2 py-1 rounded-md inline-block mt-1", statusColors[selectedOrder.status])}>
-                      {getStatusLabel(selectedOrder.status)}
+                    <span className={cn("text-xs font-bold uppercase px-2 py-1 rounded-md inline-block mt-1", statusColors[selectedOrder.orderStatus || 'Pending'])}>
+                      {getStatusLabel(selectedOrder.orderStatus || 'Pending')}
                     </span>
                   </div>
                 </div>
@@ -242,33 +242,33 @@ const Orders = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-4">
-                  {selectedOrder.status === 'pending' && (
+                  {(selectedOrder.orderStatus === 'Pending' || !selectedOrder.orderStatus) && (
                     <>
                       <button
-                        onClick={() => updateStatus(selectedOrder.orderId, 'cancelled')}
+                        onClick={() => updateStatus(selectedOrder.orderId, 'Cancelled')}
                         className="px-4 py-3 border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 transition-all"
                       >
                         {t('orders.cancel_order')}
                       </button>
                       <button
-                        onClick={() => updateStatus(selectedOrder.orderId, 'confirmed')}
+                        onClick={() => updateStatus(selectedOrder.orderId, 'Confirmed')}
                         className="px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                       >
                         {t('orders.confirm_order')}
                       </button>
                     </>
                   )}
-                  {selectedOrder.status === 'confirmed' && (
+                  {selectedOrder.orderStatus === 'Confirmed' && (
                     <button
-                      onClick={() => updateStatus(selectedOrder.orderId, 'shipped')}
+                      onClick={() => updateStatus(selectedOrder.orderId, 'Shipped')}
                       className="col-span-2 px-4 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200"
                     >
                       {t('orders.mark_as_shipped')}
                     </button>
                   )}
-                  {selectedOrder.status === 'shipped' && (
+                  {selectedOrder.orderStatus === 'Shipped' && (
                     <button
-                      onClick={() => updateStatus(selectedOrder.orderId, 'delivered')}
+                      onClick={() => updateStatus(selectedOrder.orderId, 'Delivered')}
                       className="col-span-2 px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                     >
                       {t('orders.mark_as_delivered')}

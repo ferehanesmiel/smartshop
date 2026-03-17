@@ -3,11 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Product, Shop } from '../types';
-import { Package, ShoppingCart, Store, ChevronLeft, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { Package, ShoppingCart, Store, ChevronLeft, ShieldCheck, Truck, RotateCcw, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCart } from '../CartContext';
+import { useTranslation } from 'react-i18next';
 
 const MarketplaceProduct = () => {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,7 +113,9 @@ const MarketplaceProduct = () => {
                   <Store size={18} />
                   {shop?.shopName || 'Unknown Shop'}
                 </Link>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  {typeof product.name === 'string' ? product.name : product.name.en}
+                </h1>
                 <div className="flex items-center gap-4 mb-6">
                   <span className="text-3xl font-bold text-emerald-600">{product.price.toLocaleString()} ETB</span>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${product.quantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
@@ -143,7 +149,22 @@ const MarketplaceProduct = () => {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <button className="flex-1 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => {
+                        if (product && shop) {
+                          addToCart({
+                            productId: product.productId,
+                            name: typeof product.name === 'string' ? product.name : product.name.en,
+                            price: product.price,
+                            quantity: quantity,
+                            imageUrl: product.imageUrl,
+                            shopId: product.shopId,
+                            shopName: shop.shopName
+                          });
+                        }
+                      }}
+                      className="flex-1 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+                    >
                       <ShoppingCart size={20} />
                       Add to Cart
                     </button>

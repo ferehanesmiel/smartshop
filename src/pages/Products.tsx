@@ -99,8 +99,9 @@ const Products = () => {
 
     if (product) {
       setEditingProduct(product);
+      const name = typeof product.name === 'string' ? product.name : product.name.en;
       setFormData({
-        name: product.name,
+        name: name,
         price: product.price.toString(),
         costPrice: product.costPrice?.toString() || '',
         quantity: product.quantity.toString(),
@@ -200,7 +201,8 @@ const Products = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'marketplace'>('all');
 
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const name = typeof p.name === 'string' ? p.name : p.name.en;
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          p.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === 'all' || p.isPublishedToMarketplace;
     return matchesSearch && matchesTab;
@@ -340,7 +342,9 @@ const Products = () => {
               </div>
               <div className="p-4">
                 <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">{product.category}</p>
-                <h3 className="font-bold text-gray-900 truncate">{product.name}</h3>
+                <h3 className="font-bold text-gray-900 truncate">
+                  {typeof product.name === 'string' ? product.name : product.name.en}
+                </h3>
                 <div className="mt-3 flex items-center justify-between">
                   <p className="text-lg font-bold text-gray-900">{product.price.toLocaleString()} ETB</p>
                   <p className="text-xs text-gray-500">{product.quantity} {t('products.in_stock')}</p>

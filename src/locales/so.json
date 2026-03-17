@@ -158,6 +158,8 @@
     "description": "Sharaxaadda (Ikhtiyaari)",
     "description_placeholder": "Faahfaahinta alaabta, astaamaha, iwm.",
     "product_image": "Sawirka Alaabta",
+    "name_placeholder": "tusaale. Dharka Hidaha",
+    "category_placeholder": "tusaale. Dharka, Cuntada, Elektaroonigga",
     "upload_image": "Soo geli Sawir",
     "paste_url": "Ama ku dheji URL...",
     "image_recommendation": "Talo: Sawir laba jibbaaran, ugu badnaan 1MB",
@@ -240,7 +242,10 @@
       "vat_rate": "Heerka VAT (Standard)",
       "summary_by_transaction": "Soo koobidda VAT ee iib kasta",
       "net_amount": "Lacagta Net-ka ah",
-      "vat_amount": "Lacagta VAT-ka"
+      "vat_amount": "Lacagta VAT-ka",
+      "date": "Taariikhda",
+      "receipt": "Rasiidka",
+      "total": "Warta"
     },
     "profit": {
       "gross_revenue": "Dakhliga Guud",
@@ -257,7 +262,10 @@
       "inventory_value_desc": "Iyadoo lagu salaynayo qiimaha agabka",
       "status_report": "Warbixinta Xaaladda Alaabada",
       "stock_level": "Heerka Kaydka",
-      "unit_cost": "Qiimaha Halbeegga Agabka"
+      "unit_cost": "Qiimaha Halbeegga Agabka",
+      "total_value": "Warta Qiimaha",
+      "product_name": "Magaca Alaabta",
+      "category": "Qaybta"
     },
     "marketplace": {
       "orders": "Dalabaadka Suuqa",
@@ -265,7 +273,10 @@
       "avg_order_value": "Celceliska Qiimaha Dalabka",
       "online_orders": "Dalabaadka Suuqa Online-ka ah",
       "order_id": "ID-ga Dalabka",
-      "customer": "Macmiilka"
+      "customer": "Macmiilka",
+      "status": "Xaaladda",
+      "total": "Warta",
+      "date": "Taariikhda"
     },
     "checkout": {
       "title": "Bixinta",

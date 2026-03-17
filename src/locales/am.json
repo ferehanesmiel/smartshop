@@ -334,7 +334,76 @@
     "password": "የይለፍ ቃል",
     "forgot_password": "የይለፍ ቃል ረስተዋል?",
     "no_account": "መለያ የለዎትም?",
-    "have_account": "ቀድሞውኑ መለያ አለዎት?"
+    "have_account": "ቀድሞውኑ መለያ አለዎት?",
+    "welcome_back": "እንኳን ደህና መጡ",
+    "sign_in_desc": "ሱቅዎን ለማስተዳደር ይግቡ",
+    "signing_in": "በመግባት ላይ...",
+    "google_sign_in": "በጉግል ይግቡ",
+    "or_continue_with": "ወይም በዚህ ይቀጥሉ",
+    "register_shop": "ሱቅዎን ይመዝግቡ",
+    "back_to_home": "ወደ መነሻ ይመለሱ",
+    "failed_login": "መግባት አልተቻለም",
+    "failed_google_login": "በጉግል መግባት አልተቻለም"
+  },
+  "landing": {
+    "hero": {
+      "title": "ሱቅዎን ያስተዳድሩ",
+      "title_accent": "በብልህነት",
+      "description": "ለኢትዮጵያ ሱቆች የተነደፈ የደመና POS፣ የክምችት ቁጥጥር፣ የተ.እ.ታ ስሌት እና የትርፍ ክትትል። ንግድዎን ከየትኛውም ቦታ፣ በማንኛውም ጊዜ ያስተዳድሩ።",
+      "start_free_trial": "ነፃ ሙከራ ይጀምሩ",
+      "view_pricing": "ዋጋዎችን ይመልከቱ",
+      "no_credit_card": "የክሬዲት ካርድ አያስፈልግም",
+      "free_trial_days": "የ14 ቀን ነፃ ሙከራ",
+      "cancel_anytime": "በማንኛውም ጊዜ ይሰርዙ"
+    },
+    "marketplace": {
+      "badge": "የመስመር ላይ ገበያ",
+      "title": "ከአካባቢው ሱቆች ይግዙ",
+      "description": "በSmartShop ኢትዮጵያ የሚደገፉ የአካባቢ የኢትዮጵያ ሱቆችን ምርቶች ያግኙ። የአካባቢ ንግዶችን ይደግፉ እና በመስመር ላይ በቀላሉ ይግዙ።",
+      "browse": "ገበያውን ያስሱ"
+    },
+    "pricing": {
+      "title": "ለእያንዳንዱ ሱቅ ቀላል ዋጋ",
+      "subtitle": "ከንግድዎ ጋር የሚስማማውን እቅድ ይምረጡ።",
+      "birr_month": "ብር / በወር",
+      "features": "ባህሪያት",
+      "limits": "ገደቦች",
+      "most_popular": "በጣም ተወዳጅ",
+      "start_trial": "ነፃ ሙከራ ይጀምሩ"
+    },
+    "addons": {
+      "title": "አማራጭ ተጨማሪዎች",
+      "subtitle": "እቅድዎን በእነዚህ ተጨማሪ ባህሪያት ያብጁ።",
+      "add_to_plan": "ወደ እቅድ ያክሉ",
+      "birr_mo": "ብር/በወር"
+    },
+    "cta": {
+      "badge": "ለተወሰነ ጊዜ የቀረበ",
+      "title": "የ14 ቀን ነፃ ሙከራዎን ይጀምሩ",
+      "description": "የክሬዲት ካርድ አያስፈልግም በSmartShop ያለ ምንም ስጋት ይሞክሩ።",
+      "create_account": "መለያ ይፍጠሩ",
+      "book_demo": "ማሳያ ይያዙ"
+    },
+    "footer": {
+      "description": "ለኢትዮጵያ የችርቻሮ ገበያ ተብሎ የተነደፈው ግንባር ቀደም የደመና POS እና የሱቅ አስተዳደር ስርዓት።",
+      "product": "ምርት",
+      "company": "ኩባንያ",
+      "support": "ድጋፍ",
+      "privacy": "የግላዊነት ፖሊሲ",
+      "contact": "እውቂያ",
+      "copyright": "© 2026 SmartShop ኢትዮጵያ"
+    }
+  },
+  "admin": {
+    "title": "የአስተዳዳሪ ፓነል",
+    "total_shops": "ጠቅላላ ሱቆች",
+    "active_shops": "ንቁ ሱቆች",
+    "total_users": "ጠቅላላ ተጠቃሚዎች",
+    "total_marketplace_orders": "ጠቅላላ የገበያ ቦታ ትዕዛዞች",
+    "total_revenue": "ጠቅላላ ገቢ",
+    "active_subscriptions": "ንቁ ምዝገባዎች",
+    "loading": "በመጫን ላይ...",
+    "login_required": "የአስተዳዳሪ ፓነልን ለመድረስ እባክዎ ይግቡ።"
   },
   "settings": {
     "title": "ቅንብሮች",

@@ -42,34 +42,39 @@ const MarketplaceCheckout = () => {
       });
 
       const orderPromises = Object.entries(itemsByShop).map(async ([shopId, shopItems]) => {
-        const orderData: Omit<Order, 'orderId'> = {
+        const totalAmount = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const orderData: any = {
           shopId,
+          customerId: formData.customerPhone, // Using phone as ID for now
           customerName: formData.customerName,
           customerPhone: formData.customerPhone,
           customerAddress: formData.customerAddress,
           items: shopItems.map(item => ({
-            productId: item.id,
+            productId: item.productId,
             name: item.name,
             price: item.price,
             quantity: item.quantity,
             imageUrl: item.imageUrl,
             shopId: item.shopId
           })),
-          totalAmount: shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-          commissionAmount: shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.03,
-          status: 'pending',
+          totalAmount,
+          vatAmount: totalAmount * 0.15,
+          commissionAmount: totalAmount * 0.03,
+          orderStatus: 'Pending',
           paymentMethod: formData.paymentMethod,
-          paymentStatus: 'pending',
+          paymentStatus: 'Pending',
           isMarketplaceOrder: true,
           createdAt: new Date().toISOString(),
         };
 
         // Create the order
         const orderRef = await addDoc(collection(db, 'orders'), orderData);
+        const orderId = orderRef.id;
+        await updateDoc(orderRef, { orderId });
         
         // Update inventory for each item
         shopItems.forEach(item => {
-          const productRef = doc(db, 'products', item.id);
+          const productRef = doc(db, 'products', item.productId);
           batch.update(productRef, {
             quantity: increment(-item.quantity)
           });
@@ -211,7 +216,7 @@ const MarketplaceCheckout = () => {
               
               <div className="max-h-60 overflow-y-auto mb-6 space-y-4 pr-2 custom-scrollbar">
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center text-sm">
+                  <div key={item.productId} className="flex justify-between items-center text-sm">
                     <div className="flex-1 pr-4">
                       <p className="font-bold text-gray-900 line-clamp-1">{item.name}</p>
                       <p className="text-gray-500">{t('checkout.qty')}: {item.quantity}</p>

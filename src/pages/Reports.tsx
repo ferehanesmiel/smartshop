@@ -144,7 +144,7 @@ const Reports = () => {
     const totalVat = filteredSales.reduce((acc, s) => acc + (s.vatAmount || 0), 0);
     
     const marketplaceRevenue = filteredOrders
-      .filter(o => o.status === 'delivered')
+      .filter(o => o.orderStatus === 'Delivered')
       .reduce((acc, o) => acc + o.totalAmount, 0);
     
     const inventoryValue = products.reduce((acc, p) => acc + (p.quantity * (p.costPrice || 0)), 0);
@@ -643,7 +643,9 @@ const Reports = () => {
                     <tbody className="divide-y divide-gray-50">
                       {products.map((product) => (
                         <tr key={product.productId}>
-                          <td className="px-6 py-4 text-sm font-bold text-gray-900">{product.name}</td>
+                          <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                            {typeof product.name === 'string' ? product.name : product.name.en}
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-600">{product.category}</td>
                           <td className="px-6 py-4 text-sm">
                             <span className={`font-bold ${product.quantity <= 5 ? 'text-red-600' : 'text-gray-900'}`}>
@@ -703,11 +705,11 @@ const Reports = () => {
                           <td className="px-6 py-4 text-sm text-gray-600">{order.customerName}</td>
                           <td className="px-6 py-4">
                             <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                              order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
-                              order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              order.orderStatus === 'Delivered' ? 'bg-emerald-100 text-emerald-700' :
+                              order.orderStatus === 'Cancelled' ? 'bg-red-100 text-red-700' :
                               'bg-amber-100 text-amber-700'
                             }`}>
-                              {order.status}
+                              {order.orderStatus || 'Pending'}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm font-bold">{order.totalAmount.toLocaleString()} ETB</td>

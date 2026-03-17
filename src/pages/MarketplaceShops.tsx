@@ -50,11 +50,13 @@ const MarketplaceShops = () => {
                 const data = doc.data();
                 const shop = shopsData.find(s => s.shopId === data.shopId);
                 if (!shop) return null;
+                const name = typeof data.name === 'string' ? data.name : data.name.en;
                 return {
                   productId: doc.id,
                   ...data,
+                  name, // Use the extracted string name for UI
                   shopName: shop.shopName
-                } as Product;
+                } as any as Product;
               })
               .filter((p): p is Product => p !== null);
 
@@ -182,6 +184,7 @@ const MarketplaceShops = () => {
                                 productId: product.productId,
                                 name: product.name,
                                 price: product.price,
+                                quantity: 1,
                                 imageUrl: product.imageUrl,
                                 shopId: product.shopId,
                                 shopName: product.shopName || 'Unknown Shop'

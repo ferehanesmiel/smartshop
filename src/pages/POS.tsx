@@ -59,11 +59,12 @@ const POS = () => {
   const hasDiscountAccess = isFeatureAllowed('discounts');
 
   const handleScan = (barcode: string) => {
-    const product = products.find(p => 
-      p.barcode === barcode || 
-      p.productId === barcode || 
-      p.name.toLowerCase() === barcode.toLowerCase()
-    );
+    const product = products.find(p => {
+      const name = typeof p.name === 'string' ? p.name : p.name.en;
+      return p.barcode === barcode || 
+             p.productId === barcode || 
+             name.toLowerCase() === barcode.toLowerCase();
+    });
     if (product) {
       addToCart(product);
       setIsScannerOpen(false);
@@ -104,13 +105,13 @@ const POS = () => {
       }
       return [...prev, { 
         productId: product.productId, 
-        productName: product.name, 
+        productName: typeof product.name === 'string' ? product.name : product.name.en, 
         price: product.price, 
         costPrice: product.costPrice || 0,
         quantity: 1,
         vatRate: product.vatRate || 15,
         vatType: product.vatType || 'inclusive'
-      }];
+      } as SaleItem];
     });
   };
 
@@ -243,7 +244,7 @@ const POS = () => {
         }
       }
 
-      setLastSale({ saleId, ...saleData } as Sale);
+      setLastSale({ id: saleId, saleId, ...saleData } as any as Sale);
 
       // 4. Create Digital Receipt
       const receiptData: any = {
@@ -418,33 +419,36 @@ const POS = () => {
         {isScannerOpen && <QRScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
 
         <div className="flex-1 overflow-y-auto pb-24 lg:pb-0 pr-2 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
-            <button
-              key={product.productId}
-              onClick={() => addToCart(product)}
-              disabled={product.quantity <= 0}
-              className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex flex-col group disabled:opacity-50"
-            >
-              <div className="aspect-square rounded-xl bg-gray-50 mb-3 overflow-hidden relative">
-                {product.imageUrl && (
-                  <img 
-                    src={product.imageUrl} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
-                    referrerPolicy="no-referrer"
-                  />
-                )}
-                {product.quantity <= 0 && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold uppercase">
-                    {t('pos.out_of_stock')}
-                  </div>
-                )}
-              </div>
-              <h3 className="font-bold text-sm text-gray-900 truncate">{product.name}</h3>
-              <p className="text-emerald-600 font-bold mt-1">{product.price.toLocaleString()} ETB</p>
-              <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">{product.category}</p>
-            </button>
-          ))}
+          {filteredProducts.map((product) => {
+            const name = typeof product.name === 'string' ? product.name : product.name.en;
+            return (
+              <button
+                key={product.productId}
+                onClick={() => addToCart(product)}
+                disabled={product.quantity <= 0}
+                className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex flex-col group disabled:opacity-50"
+              >
+                <div className="aspect-square rounded-xl bg-gray-50 mb-3 overflow-hidden relative">
+                  {product.imageUrl && (
+                    <img 
+                      src={product.imageUrl} 
+                      alt={name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                  {product.quantity <= 0 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold uppercase">
+                      {t('pos.out_of_stock')}
+                    </div>
+                  )}
+                </div>
+                <h3 className="font-bold text-sm text-gray-900 truncate">{name}</h3>
+                <p className="text-emerald-600 font-bold mt-1">{product.price.toLocaleString()} ETB</p>
+                <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">{product.category}</p>
+              </button>
+            );
+          })}
         </div>
       </div>
 

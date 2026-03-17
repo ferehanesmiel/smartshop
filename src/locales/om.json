@@ -158,6 +158,8 @@
     "description": "Ibsa (Filannoo)",
     "description_placeholder": "Bal'ina oomishaa, amaloota, kkf.",
     "product_image": "Fakkii Oomishaa",
+    "name_placeholder": "fkn. Uffata Aadaa",
+    "category_placeholder": "fkn. Uffata, Nyaata, Elektirooniksii",
     "upload_image": "Fakkii Ol-kaayi",
     "paste_url": "Ykn URL asitti maxxansi...",
     "image_recommendation": "Gorsa: Fakkii isquweerii, max 1MB",
@@ -240,7 +242,10 @@
       "vat_rate": "Reetii VAT (Standardii)",
       "summary_by_transaction": "Ibsa VAT Akka Gurgurtaatti",
       "net_amount": "Maallaqa Qulqulluu",
-      "vat_amount": "Maallaqa VAT"
+      "vat_amount": "Maallaqa VAT",
+      "date": "Guyyaa",
+      "receipt": "Resiitii",
+      "total": "Waliigala"
     },
     "profit": {
       "gross_revenue": "Galii Waliigalaa",
@@ -257,7 +262,10 @@
       "inventory_value_desc": "Gatii baasii irratti hundaa'uun",
       "status_report": "Gabaasa Haala Kuusaa",
       "stock_level": "Sadarkaa Kuusaa",
-      "unit_cost": "Baasii Tokkoo"
+      "unit_cost": "Baasii Tokkoo",
+      "total_value": "Gatii Waliigalaa",
+      "product_name": "Maqaa Oomishaa",
+      "category": "Ramaddii"
     },
     "marketplace": {
       "orders": "Ajajawwan Gabaa",
@@ -265,7 +273,10 @@
       "avg_order_value": "Gatii Ajajaa Giddu-galeessaa",
       "online_orders": "Ajajawwan Gabaa Onlaayinii",
       "order_id": "ID Ajajaa",
-      "customer": "Maamila"
+      "customer": "Maamila",
+      "status": "Haala",
+      "total": "Waliigala",
+      "date": "Guyyaa"
     },
     "checkout": {
       "title": "Kaffaltii",

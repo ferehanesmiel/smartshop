@@ -3,11 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Shop, Product } from '../types';
-import { Store, Phone, Mail, MapPin, Package, ShoppingCart, Search } from 'lucide-react';
+import { Store, Phone, Mail, MapPin, Package, ShoppingCart, Search, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCart } from '../CartContext';
+import { useTranslation } from 'react-i18next';
 
 const MarketplaceShop = () => {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
+  const { addToCart } = useCart();
   const [shop, setShop] = useState<Shop | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,9 +71,10 @@ const MarketplaceShop = () => {
     fetchShopData();
   }, [slug]);
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = products.filter(product => {
+    const name = typeof product.name === 'string' ? product.name : product.name.en;
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   if (loading) {
     return (
@@ -176,46 +181,62 @@ const MarketplaceShop = () => {
 
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <motion.div
-                    key={product.productId}
-                    whileHover={{ y: -5 }}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group"
-                  >
-                    <Link to={`/product/${product.slug}`} className="block aspect-square bg-gray-50 overflow-hidden">
-                      {product.imageUrl ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <Package size={48} />
-                        </div>
-                      )}
-                    </Link>
-                    <div className="p-4">
-                      <Link to={`/product/${product.slug}`} className="font-bold text-gray-900 hover:text-emerald-600 transition-colors block mb-1">
-                        {product.name}
+                {filteredProducts.map((product) => {
+                  const name = typeof product.name === 'string' ? product.name : product.name.en;
+                  return (
+                    <motion.div
+                      key={product.productId}
+                      whileHover={{ y: -5 }}
+                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group"
+                    >
+                      <Link to={`/product/${product.productId}`} className="block aspect-square bg-gray-50 overflow-hidden">
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <Package size={48} />
+                          </div>
+                        )}
                       </Link>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-emerald-600">{product.price.toLocaleString()} ETB</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${product.quantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                          {product.quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                        </span>
+                      <div className="p-4">
+                        <Link to={`/product/${product.productId}`} className="font-bold text-gray-900 hover:text-emerald-600 transition-colors block mb-1">
+                          {name}
+                        </Link>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-lg font-bold text-emerald-600">{product.price.toLocaleString()} ETB</span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${product.quantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                            {product.quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            if (product.quantity > 0) {
+                              addToCart({
+                                productId: product.productId,
+                                name: name,
+                                price: product.price,
+                                quantity: 1,
+                                imageUrl: product.imageUrl,
+                                shopId: product.shopId,
+                                shopName: shop.shopName
+                              });
+                            }
+                          }}
+                          disabled={product.quantity <= 0}
+                          className="w-full py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ShoppingCart size={18} />
+                          Add to Cart
+                        </button>
                       </div>
-                      <button 
-                        disabled={product.quantity <= 0}
-                        className="w-full py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <ShoppingCart size={18} />
-                        Add to Cart
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">

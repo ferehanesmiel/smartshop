@@ -158,6 +158,8 @@
     "description": "መግለጺ (ኣማራጺ)",
     "description_placeholder": "ዝርዝር ፍርያት፣ ባህርያት፣ ወዘተ።",
     "product_image": "ስእሊ ፍርያት",
+    "name_placeholder": "ንኣብነት፡ ባህላዊ ክዳን",
+    "category_placeholder": "ንኣብነት፡ ክዳውንቲ፣ መግቢ፣ ኤሌክትሮኒክስ",
     "upload_image": "ስእሊ ጽዓን",
     "paste_url": "ወይ URL ኣብዚ ለጥፍ...",
     "image_recommendation": "ምኽሪ: ስኩዌር ስእሊ፣ ዝለዓለ 1MB",
@@ -240,7 +242,10 @@
       "vat_rate": "መጠን VAT (Standard)",
       "summary_by_transaction": "መግለጺ VAT ብመሸጣ",
       "net_amount": "ጽሩይ ገንዘብ",
-      "vat_amount": "ገንዘብ VAT"
+      "vat_amount": "ገንዘብ VAT",
+      "date": "ዕለት",
+      "receipt": "ደረሰኝ",
+      "total": "ጠቕላላ"
     },
     "profit": {
       "gross_revenue": "ጠቕላላ ኣታዊ",
@@ -257,7 +262,10 @@
       "inventory_value_desc": "ኣብ መዐደጊ ዋጋ ተመርኲስካ",
       "status_report": "ጸብጻብ ኩነታት ክምዝን",
       "stock_level": "ደረጃ ክምዝን",
-      "unit_cost": "ወጻኢ ሓደ"
+      "unit_cost": "ወጻኢ ሓደ",
+      "total_value": "ጠቕላላ ዋጋ",
+      "product_name": "ስም ፍርያት",
+      "category": "መደብ"
     },
     "marketplace": {
       "orders": "ትእዛዛት ዕዳጋ",
@@ -265,7 +273,10 @@
       "avg_order_value": "ማእከላይ ዋጋ ትእዛዝ",
       "online_orders": "ናይ ኦንላይን ዕዳጋ ትእዛዛት",
       "order_id": "ID ትእዛዝ",
-      "customer": "ዓሚል"
+      "customer": "ዓሚል",
+      "status": "ኩነታት",
+      "total": "ጠቕላላ",
+      "date": "ዕለት"
     },
     "checkout": {
       "title": "ክፍሊት",

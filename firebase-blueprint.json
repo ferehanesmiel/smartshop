@@ -1,228 +1,77 @@
 {
   "entities": {
-    "Shop": {
-      "title": "Shop",
-      "description": "A business registered on the platform",
+    "User": {
+      "title": "User",
+      "description": "User profile information",
       "type": "object",
       "properties": {
-        "shopId": { "type": "string" },
-        "shopName": { "type": "string" },
-        "ownerName": { "type": "string" },
-        "phone": { "type": "string" },
-        "email": { "type": "string" },
-        "address": { "type": "string" },
-        "logo": { "type": "string" },
-        "subscriptionPlan": { "type": "string", "enum": ["basic", "pro", "premium"] },
-        "subscriptionStatus": { "type": "string", "enum": ["active", "expired", "trial"] },
-        "subscriptionStartDate": { "type": "string", "format": "date-time" },
-        "subscriptionExpiryDate": { "type": "string", "format": "date-time" },
-        "onlineStoreEnabled": { "type": "boolean" },
-        "status": { "type": "string", "enum": ["active", "suspended"] },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "ownerUid": { "type": "string" },
-        "slug": { "type": "string" },
-        "description": { "type": "string" },
-        "logoUrl": { "type": "string" },
-        "bannerUrl": { "type": "string" },
-        "category": { "type": "string" },
-        "isMarketplaceEnabled": { "type": "boolean" },
-        "currentProductCount": { "type": "integer" },
-        "currentUserCount": { "type": "integer" },
-        "currentBranchCount": { "type": "integer" }
-      },
-      "required": ["shopId", "shopName", "ownerName", "phone", "email", "ownerUid", "slug"]
-    },
-    "SubscriptionPlan": {
-      "title": "Subscription Plan",
-      "description": "Definition of a subscription package",
-      "type": "object",
-      "properties": {
-        "planId": { "type": "string" },
-        "planName": { "type": "string" },
-        "monthlyPrice": { "type": "number" },
-        "maxUsers": { "type": "integer" },
-        "maxProducts": { "type": "integer" },
-        "multiBranchEnabled": { "type": "boolean" },
-        "advancedReportsEnabled": { "type": "boolean" },
-        "onlineStoreEnabled": { "type": "boolean" },
-        "smsNotificationsEnabled": { "type": "boolean" },
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["customer", "shop_owner", "admin"] },
+        "name": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["planId", "planName", "monthlyPrice", "maxUsers", "maxProducts"]
+      "required": ["id", "email", "role"]
+    },
+    "Shop": {
+      "title": "Shop",
+      "description": "Shop owner's store information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "subscriptionPlan": { "type": "string", "enum": ["Basic", "Pro", "Premium"] },
+        "logoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "name", "subscriptionPlan"]
     },
     "Product": {
       "title": "Product",
-      "description": "An item for sale in a shop",
+      "description": "Product listed in a shop",
       "type": "object",
       "properties": {
-        "productId": { "type": "string" },
+        "id": { "type": "string" },
         "shopId": { "type": "string" },
-        "name": { "type": "string" },
+        "name": { "type": "object", "description": "Multi-language name {en: string, am: string}" },
+        "description": { "type": "object", "description": "Multi-language description {en: string, am: string}" },
         "price": { "type": "number" },
-        "quantity": { "type": "integer" },
+        "costPrice": { "type": "number" },
+        "stock": { "type": "integer" },
+        "vatInclusive": { "type": "boolean" },
         "category": { "type": "string" },
-        "barcode": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "description": { "type": "string" },
-        "slug": { "type": "string" },
-        "isPublishedToMarketplace": { "type": "boolean" },
+        "barcode": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["productId", "shopId", "name", "price", "quantity"]
-    },
-    "Sale": {
-      "title": "Sale",
-      "description": "A completed transaction",
-      "type": "object",
-      "properties": {
-        "saleId": { "type": "string" },
-        "shopId": { "type": "string" },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "productId": { "type": "string" },
-              "productName": { "type": "string" },
-              "quantity": { "type": "integer" },
-              "price": { "type": "number" }
-            }
-          }
-        },
-        "totalAmount": { "type": "number" },
-        "paymentMethod": { "type": "string", "enum": ["cash", "mobile", "card"] },
-        "customerPhone": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["saleId", "shopId", "items", "totalAmount", "paymentMethod", "createdAt"]
-    },
-    "Customer": {
-      "title": "Customer",
-      "description": "A customer of a specific shop",
-      "type": "object",
-      "properties": {
-        "customerId": { "type": "string" },
-        "shopId": { "type": "string" },
-        "name": { "type": "string" },
-        "phone": { "type": "string" },
-        "purchaseCount": { "type": "integer" },
-        "loyaltyPoints": { "type": "integer" },
-        "lastPurchaseDate": { "type": "string", "format": "date-time" }
-      },
-      "required": ["customerId", "shopId", "name", "phone"]
+      "required": ["id", "shopId", "name", "price", "stock"]
     },
     "Order": {
       "title": "Order",
-      "description": "An online order from a customer",
+      "description": "Customer order for products from a shop",
       "type": "object",
       "properties": {
-        "orderId": { "type": "string" },
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
         "shopId": { "type": "string" },
-        "customerPhone": { "type": "string" },
-        "customerName": { "type": "string" },
-        "items": { "type": "array" },
+        "items": { "type": "array", "items": { "type": "object" } },
         "totalAmount": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "confirmed", "preparing", "delivered", "cancelled"] },
-        "paymentMethod": { "type": "string", "enum": ["cod", "telebirr", "bank_transfer"] },
-        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed"] },
-        "isMarketplaceOrder": { "type": "boolean" },
+        "vatAmount": { "type": "number" },
+        "commissionAmount": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Cash on Delivery", "Telebirr", "Bank Transfer"] },
+        "paymentStatus": { "type": "string", "enum": ["Pending", "Paid", "Failed"] },
+        "orderStatus": { "type": "string", "enum": ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["orderId", "shopId", "customerPhone", "items", "totalAmount", "status", "createdAt"]
-    },
-    "Subscription": {
-      "title": "Subscription",
-      "description": "A shop's subscription details",
-      "type": "object",
-      "properties": {
-        "subscriptionId": { "type": "string" },
-        "shopId": { "type": "string" },
-        "planName": { "type": "string", "enum": ["basic", "pro", "premium"] },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
-        "paymentStatus": { "type": "string", "enum": ["paid", "unpaid"] },
-        "subscriptionStatus": { "type": "string", "enum": ["active", "expired"] }
-      },
-      "required": ["subscriptionId", "shopId", "planName", "startDate", "endDate", "paymentStatus", "subscriptionStatus"]
-    },
-    "Receipt": {
-      "title": "Receipt",
-      "description": "A digital receipt for a sale",
-      "type": "object",
-      "properties": {
-        "receiptId": { "type": "string" },
-        "shopId": { "type": "string" },
-        "saleId": { "type": "string" },
-        "customerPhone": { "type": "string" },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "productId": { "type": "string" },
-              "productName": { "type": "string" },
-              "quantity": { "type": "integer" },
-              "price": { "type": "number" }
-            }
-          }
-        },
-        "totalAmount": { "type": "number" },
-        "paymentMethod": { "type": "string", "enum": ["cash", "mobile", "card"] },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "shopName": { "type": "string" }
-      },
-      "required": ["receiptId", "shopId", "saleId", "items", "totalAmount", "paymentMethod", "createdAt"]
-    },
-    "Admin": {
-      "title": "Admin",
-      "description": "A platform administrator",
-      "type": "object",
-      "properties": {
-        "adminId": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "role": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["adminId", "name", "email", "role", "createdAt"]
+      "required": ["id", "customerId", "shopId", "items", "totalAmount"]
     }
   },
   "firestore": {
-    "/shops/{shopId}": {
-      "schema": "Shop",
-      "description": "Main shop metadata"
-    },
-    "/subscriptionPlans/{planId}": {
-      "schema": "SubscriptionPlan",
-      "description": "Available subscription plans"
-    },
-    "/products/{productId}": {
-      "schema": "Product",
-      "description": "Products for all shops"
-    },
-    "/sales/{saleId}": {
-      "schema": "Sale",
-      "description": "Sales records for all shops"
-    },
-    "/customers/{customerId}": {
-      "schema": "Customer",
-      "description": "Customer records for all shops"
-    },
-    "/orders/{orderId}": {
-      "schema": "Order",
-      "description": "Online orders for all shops"
-    },
-    "/receipts/{receiptId}": {
-      "schema": "Receipt",
-      "description": "Digital receipts for all shops"
-    },
-    "/subscriptions/{subscriptionId}": {
-      "schema": "Subscription",
-      "description": "Subscription records"
-    },
-    "/admins/{adminId}": {
-      "schema": "Admin",
-      "description": "Platform administrators"
-    }
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/shops/{shopId}": { "schema": "Shop", "description": "Store information" },
+    "/products/{productId}": { "schema": "Product", "description": "Products in the marketplace" },
+    "/orders/{orderId}": { "schema": "Order", "description": "Customer orders" }
   }
 }

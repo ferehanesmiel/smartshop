@@ -48,11 +48,13 @@ const MarketplaceHome = () => {
           const productsData = productsSnapshot.docs.map(doc => {
             const data = doc.data();
             const shop = shopsData.find(s => s.shopId === data.shopId);
+            const name = typeof data.name === 'string' ? data.name : data.name.en;
             return {
               productId: doc.id,
               ...data,
+              name, // Use the extracted string name for UI
               shopName: shop?.shopName || 'Unknown Shop'
-            } as Product;
+            } as any as Product;
           });
           setFeaturedProducts(productsData);
         }
@@ -262,6 +264,7 @@ const MarketplaceHome = () => {
                             productId: product.productId,
                             name: product.name,
                             price: product.price,
+                            quantity: 1,
                             imageUrl: product.imageUrl,
                             shopId: product.shopId,
                             shopName: product.shopName || 'Unknown Shop'

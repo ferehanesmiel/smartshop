@@ -336,7 +336,76 @@
     "password": "Password",
     "forgot_password": "Forgot Password?",
     "no_account": "Don't have an account?",
-    "have_account": "Already have an account?"
+    "have_account": "Already have an account?",
+    "welcome_back": "Welcome Back",
+    "sign_in_desc": "Sign in to manage your shop",
+    "signing_in": "Signing in...",
+    "google_sign_in": "Sign in with Google",
+    "or_continue_with": "Or continue with",
+    "register_shop": "Register your shop",
+    "back_to_home": "Back to home",
+    "failed_login": "Failed to login",
+    "failed_google_login": "Failed to login with Google"
+  },
+  "landing": {
+    "hero": {
+      "title": "Run Your Shop",
+      "title_accent": "Smarter",
+      "description": "Cloud POS, Inventory, VAT calculation, and profit tracking designed for Ethiopian shops. Manage your business from anywhere, anytime.",
+      "start_free_trial": "Start Free Trial",
+      "view_pricing": "View Pricing",
+      "no_credit_card": "No credit card required",
+      "free_trial_days": "14-day free trial",
+      "cancel_anytime": "Cancel anytime"
+    },
+    "marketplace": {
+      "badge": "Online Marketplace",
+      "title": "Shop From Local Stores",
+      "description": "Discover products from local Ethiopian shops powered by SmartShop Ethiopia. Support local businesses and shop online with ease.",
+      "browse": "Browse Marketplace"
+    },
+    "pricing": {
+      "title": "Simple Pricing for Every Shop",
+      "subtitle": "Choose the plan that fits your business.",
+      "birr_month": "Birr / Month",
+      "features": "Features",
+      "limits": "Limits",
+      "most_popular": "Most Popular",
+      "start_trial": "Start Free Trial"
+    },
+    "addons": {
+      "title": "Optional Add-ons",
+      "subtitle": "Customize your plan with these extra features.",
+      "add_to_plan": "Add to Plan",
+      "birr_mo": "Birr/mo"
+    },
+    "cta": {
+      "badge": "Limited Time Offer",
+      "title": "Start Your Free 14-Day Trial",
+      "description": "No credit card required. Try SmartShop risk-free.",
+      "create_account": "Create Account",
+      "book_demo": "Book Demo"
+    },
+    "footer": {
+      "description": "The leading cloud POS and shop management system designed specifically for the Ethiopian retail market.",
+      "product": "Product",
+      "company": "Company",
+      "support": "Support",
+      "privacy": "Privacy Policy",
+      "contact": "Contact",
+      "copyright": "© 2026 SmartShop Ethiopia"
+    }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "total_shops": "Total Shops",
+    "active_shops": "Active Shops",
+    "total_users": "Total Users",
+    "total_marketplace_orders": "Total Marketplace Orders",
+    "total_revenue": "Total Revenue",
+    "active_subscriptions": "Active Subscriptions",
+    "loading": "Loading...",
+    "login_required": "Please log in to access the Admin Panel."
   },
   "settings": {
     "title": "Settings",

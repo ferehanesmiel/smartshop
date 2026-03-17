@@ -43,7 +43,7 @@ const MarketplaceCart = () => {
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
               <motion.div
-                key={item.id}
+                key={item.productId}
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -65,7 +65,7 @@ const MarketplaceCart = () => {
                     <div className="flex justify-between items-start">
                       <h3 className="font-bold text-gray-900 md:text-lg">{item.name}</h3>
                       <button
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item.productId)}
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                       >
                         <Trash2 size={18} />
@@ -77,14 +77,14 @@ const MarketplaceCart = () => {
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center border border-gray-100 rounded-xl overflow-hidden bg-gray-50">
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                         className="px-3 py-1 hover:bg-gray-200 text-gray-600 transition-colors"
                       >
                         -
                       </button>
                       <span className="px-4 py-1 font-bold text-gray-900 text-sm">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                         className="px-3 py-1 hover:bg-gray-200 text-gray-600 transition-colors"
                       >
                         +

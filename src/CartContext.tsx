@@ -1,13 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { OrderItem } from './types';
-
-interface CartItem extends OrderItem {
-  id: string; // productId
-}
+import { CartItem } from './types';
 
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
+  addToCart: (item: CartItem) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -20,7 +17,14 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('marketplace_cart');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   });
 
   useEffect(() => {
@@ -29,10 +33,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addItem = (newItem: CartItem) => {
     setItems(prev => {
-      const existing = prev.find(item => item.id === newItem.id);
+      const existing = prev.find(item => item.productId === newItem.productId);
       if (existing) {
         return prev.map(item =>
-          item.id === newItem.id
+          item.productId === newItem.productId
             ? { ...item, quantity: item.quantity + newItem.quantity }
             : item
         );
@@ -41,14 +45,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const addToCart = addItem;
+
   const removeItem = (productId: string) => {
-    setItems(prev => prev.filter(item => item.id !== productId));
+    setItems(prev => prev.filter(item => item.productId !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
     setItems(prev =>
       prev.map(item =>
-        item.id === productId ? { ...item, quantity: Math.max(1, quantity) } : item
+        item.productId === productId ? { ...item, quantity: Math.max(1, quantity) } : item
       )
     );
   };
@@ -59,7 +65,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ items, addItem, addToCart, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
       {children}
     </CartContext.Provider>
   );

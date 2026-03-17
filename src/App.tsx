@@ -1,12 +1,11 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { SubscriptionProvider } from './SubscriptionContext';
+import { CartProvider } from './CartContext';
+import { Toaster } from 'react-hot-toast';
+import ErrorBoundary from './components/ErrorBoundary';
+
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -41,7 +40,6 @@ import MarketplaceCart from './pages/MarketplaceCart';
 import MarketplaceCheckout from './pages/MarketplaceCheckout';
 import OnlineOrders from './pages/OnlineOrders';
 import MarketplaceDashboard from './pages/MarketplaceDashboard';
-import { CartProvider } from './CartContext';
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { user, userRole, loading } = useAuth();
@@ -79,14 +77,13 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-import ErrorBoundary from './components/ErrorBoundary';
-
 export default function App() {
   return (
     <AuthProvider>
       <SubscriptionProvider>
         <CartProvider>
           <ErrorBoundary>
+            <Toaster position="top-right" />
             <Router>
               <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -205,10 +202,9 @@ export default function App() {
           </Route>
             </Routes>
           </Router>
-        </ErrorBoundary>
-      </CartProvider>
-    </SubscriptionProvider>
-  </AuthProvider>
-);
+          </ErrorBoundary>
+        </CartProvider>
+      </SubscriptionProvider>
+    </AuthProvider>
+  );
 }
-

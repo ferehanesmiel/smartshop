@@ -23,7 +23,7 @@ import { motion } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '../lib/utils';
 import { Link, useLocation } from 'react-router-dom';
-import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import { handleFirestoreError, OperationType } from '../utils/firestoreError';
 import { PLANS, PlanType } from '../constants';
 import { useTranslation } from 'react-i18next';
 
@@ -126,9 +126,10 @@ const Dashboard = () => {
     const qSales = query(salesRef, where('shopId', '==', shop.shopId), where('createdAt', '>=', today.toISOString()), orderBy('createdAt', 'desc'));
     const unsubscribeSales = onSnapshot(qSales, (snapshot) => {
       const sales = snapshot.docs.map(doc => ({
+        id: doc.id,
         saleId: doc.id,
         ...doc.data()
-      } as Sale));
+      } as any as Sale));
       const total = sales.reduce((acc, sale) => acc + sale.totalAmount, 0);
       setStats(prev => ({ ...prev, todaySales: total }));
       setRecentSales((sales || []).slice(0, 5));
