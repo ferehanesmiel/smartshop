@@ -79,13 +79,16 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 export default function App() {
   return (
     <AuthProvider>
       <SubscriptionProvider>
         <CartProvider>
-          <Router>
-            <Routes>
+          <ErrorBoundary>
+            <Router>
+              <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -202,9 +205,10 @@ export default function App() {
           </Route>
             </Routes>
           </Router>
-        </CartProvider>
-      </SubscriptionProvider>
-    </AuthProvider>
-  );
+        </ErrorBoundary>
+      </CartProvider>
+    </SubscriptionProvider>
+  </AuthProvider>
+);
 }
 

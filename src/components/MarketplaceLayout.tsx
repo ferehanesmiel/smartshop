@@ -113,13 +113,22 @@ const MarketplaceLayout = () => {
                   </Link>
                 )}
                 {!user && (
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block py-3 text-center bg-emerald-600 text-white font-bold rounded-xl"
-                  >
-                    Seller Login
-                  </Link>
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block py-3 text-center bg-gray-100 text-gray-700 font-bold rounded-xl"
+                    >
+                      Seller Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block py-3 text-center bg-emerald-600 text-white font-bold rounded-xl"
+                    >
+                      Register Shop
+                    </Link>
+                  </>
                 )}
               </div>
             </motion.div>

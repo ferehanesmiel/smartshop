@@ -3,6 +3,7 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { Shop, User } from './types';
+import { handleFirestoreError, OperationType } from './utils/firestoreError';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -96,12 +97,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
           }
         }, (error) => {
-          console.error("Error listening to shop changes:", error);
+          handleFirestoreError(error, OperationType.GET, 'shops');
           setLoading(false);
         });
       }
     }, (error) => {
-      console.error("Error listening to user changes:", error);
+      handleFirestoreError(error, OperationType.GET, 'users');
       setLoading(false);
     });
 

@@ -6,6 +6,13 @@ import { Shop, Product } from '../types';
 import { Search, ShoppingCart, Store, Package, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const categories = [
+  { name: 'Electronics', icon: '📱' },
+  { name: 'Clothing', icon: '👕' },
+  { name: 'Groceries', icon: '🍎' },
+  { name: 'Home Goods', icon: '🏠' },
+];
+
 const Marketplace = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -62,13 +69,6 @@ const Marketplace = () => {
     fetchData();
   }, []);
 
-  const categories = [
-    { name: 'Electronics', icon: '📱' },
-    { name: 'Clothing', icon: '👕' },
-    { name: 'Groceries', icon: '🍎' },
-    { name: 'Home Goods', icon: '🏠' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -98,9 +98,9 @@ const Marketplace = () => {
             Browse Categories
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((cat) => (
+            {categories.map((cat, index) => (
               <Link
-                key={cat.name}
+                key={`${cat.name}-${index}`}
                 to={`/marketplace?category=${cat.name}`}
                 className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center border border-gray-100 group"
               >
@@ -123,9 +123,9 @@ const Marketplace = () => {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {shops.map((shop) => (
+            {shops.map((shop, index) => (
               <motion.div
-                key={shop.shopId}
+                key={`${shop.shopId}-${index}`}
                 whileHover={{ y: -5 }}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
               >
@@ -171,9 +171,9 @@ const Marketplace = () => {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {products.map((product, index) => (
               <motion.div
-                key={product.productId}
+                key={`${product.productId}-${index}`}
                 whileHover={{ y: -5 }}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group"
               >

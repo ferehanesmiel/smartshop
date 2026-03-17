@@ -83,7 +83,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 
   if (isAdmin) {
-    navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin', feature: '' });
+    navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin', feature: '', roles: ['owner'] });
   }
 
   return (

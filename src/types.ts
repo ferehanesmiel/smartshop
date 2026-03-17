@@ -36,6 +36,7 @@ export interface Shop {
   currentProductCount: number;
   currentUserCount: number;
   currentBranchCount: number;
+  userEmails?: string[];
 }
 
 export interface SubscriptionPlan {

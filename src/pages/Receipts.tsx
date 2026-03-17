@@ -98,17 +98,18 @@ const Receipts = () => {
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Method</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Cashier</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">Loading receipts...</td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400">Loading receipts...</td>
                 </tr>
               ) : filteredReceipts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">No receipts found</td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400">No receipts found</td>
                 </tr>
               ) : (
                 filteredReceipts.map((receipt) => (
@@ -133,6 +134,9 @@ const Receipts = () => {
                       <span className="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold uppercase bg-gray-100 text-gray-600">
                         {receipt.paymentMethod}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-900">{receipt.cashierName || 'N/A'}</span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
@@ -189,6 +193,12 @@ const Receipts = () => {
                     <span>Payment:</span>
                     <span className="font-medium text-gray-900 uppercase">{selectedReceipt.paymentMethod}</span>
                   </div>
+                  {selectedReceipt.cashierName && (
+                    <div className="flex justify-between">
+                      <span>Cashier:</span>
+                      <span className="font-medium text-gray-900">{selectedReceipt.cashierName}</span>
+                    </div>
+                  )}
                   {selectedReceipt.customerPhone && (
                     <div className="flex justify-between">
                       <span>Customer:</span>

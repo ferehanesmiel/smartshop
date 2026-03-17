@@ -90,8 +90,9 @@ service cloud.firestore {
     }
 
     function isShopOwner(shopId) {
+      let shopDoc = get(/databases/$(database)/documents/shops/$(shopId));
       return isAuthenticated() && (
-        isAdmin() || (shopId != null && get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid)
+        isAdmin() || (shopId != null && shopDoc != null && shopDoc.data.ownerUid == request.auth.uid)
       );
     }
 

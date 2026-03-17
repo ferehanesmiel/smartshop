@@ -90,6 +90,7 @@ const Sales = () => {
                 <th className="px-6 py-4">Customer</th>
                 <th className="px-6 py-4">Items</th>
                 <th className="px-6 py-4">Total Amount</th>
+                <th className="px-6 py-4">Cashier</th>
                 <th className="px-6 py-4">Date & Time</th>
                 <th className="px-6 py-4 text-right">Action</th>
               </tr>
@@ -98,12 +99,12 @@ const Sales = () => {
               {loading ? (
                 [1, 2, 3].map(i => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={6} className="px-6 py-4 h-16 bg-gray-50/50"></td>
+                    <td colSpan={7} className="px-6 py-4 h-16 bg-gray-50/50"></td>
                   </tr>
                 ))
               ) : filteredSales.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">No transactions found</td>
+                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">No transactions found</td>
                 </tr>
               ) : (
                 filteredSales.map((sale) => (
@@ -145,6 +146,9 @@ const Sales = () => {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm font-bold text-gray-900">{sale.totalAmount.toLocaleString()} ETB</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-900">{sale.cashierName || 'N/A'}</p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-600">

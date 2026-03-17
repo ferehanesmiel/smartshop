@@ -16,6 +16,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', href: '#' },
+    { name: 'Marketplace', href: '/marketplace' },
     { name: 'Features', href: '#features' },
     { name: 'Pricing', href: '#pricing' },
     { name: 'Contact', href: '#contact' },
@@ -55,7 +56,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden z-[60] relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 text-slate-600 hover:text-brand transition-colors"
@@ -87,12 +88,12 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="pt-4 flex flex-col gap-3 px-3">
-                <a href="/login" className="text-center py-3 text-base font-semibold text-slate-700 border border-slate-200 rounded-xl">
+                <a href="/login" className="text-center py-3 text-base font-semibold text-slate-700 border border-slate-200 rounded-xl" onClick={() => setIsOpen(false)}>
                   Login
                 </a>
-                <button className="bg-brand text-white py-3 rounded-xl text-base font-bold shadow-lg shadow-brand/20">
+                <a href="/register" className="bg-brand text-white py-3 rounded-xl text-base font-bold shadow-lg shadow-brand/20 text-center" onClick={() => setIsOpen(false)}>
                   Get Started
-                </button>
+                </a>
               </div>
             </div>
           </motion.div>

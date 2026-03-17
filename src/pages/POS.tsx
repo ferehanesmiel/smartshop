@@ -38,7 +38,7 @@ import Barcode from 'react-barcode';
 import jsPDF from 'jspdf';
 
 const POS = () => {
-  const { shop } = useAuth();
+  const { shop, userData } = useAuth();
   const { isFeatureAllowed, isSubscriptionActive } = useSubscription();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -201,7 +201,8 @@ const POS = () => {
 
     if (customerPhone) saleData.customerPhone = customerPhone;
     if (customerName) saleData.customerName = customerName;
-    if (shop.ownerName) saleData.cashierName = shop.ownerName;
+    if (userData?.name) saleData.cashierName = userData.name;
+    else if (shop.ownerName) saleData.cashierName = shop.ownerName;
 
     try {
       // 1. Save Sale
