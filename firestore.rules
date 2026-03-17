@@ -136,6 +136,20 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (isShopOwner(resource.data.shopId) || isShopStaffWithRole(resource.data.shopId, ['manager', 'accountant']) || isAdmin());
     }
 
+    match /subscriptions/{subscriptionId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     match /test/connection {
       allow read: if true;
     }
