@@ -34,21 +34,20 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        ((get(/databases/$(database)/documents/users/$(request.auth.uid)) != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
           (request.auth.token.email == "esmielferehan@gmail.com" && request.auth.token.email_verified == true));
     }
 
     function isShopOwner(shopId) {
-      return isAuthenticated() && get(/databases/$(database)/documents/shops/$(shopId)).data.ownerId == request.auth.uid;
+      return isAuthenticated() && get(/databases/$(database)/documents/shops/$(shopId)) != null && get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid;
     }
 
     function isShopStaff(shopId) {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.shop_id == shopId;
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)) != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.shop_id == shopId;
     }
 
     function isShopStaffWithRole(shopId, allowedRoles) {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return isAuthenticated() && userDoc != null && userDoc.data.shop_id == shopId && userDoc.data.role in allowedRoles;
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)) != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.shop_id == shopId && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in allowedRoles;
     }
 
     function hasRequiredFields(fields) {
@@ -68,26 +67,25 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidUser(data) {
-      return hasRequiredFields(['id', 'email', 'role']) &&
-             data.id is string &&
+      return hasRequiredFields(['email', 'role']) &&
              isValidEmail(data.email) &&
              data.role in ['customer', 'shop_owner', 'admin', 'manager', 'accountant', 'inventory', 'owner'];
     }
 
     function isValidShop(data) {
-      return hasRequiredFields(['id', 'ownerId', 'name', 'subscriptionPlan']) &&
-             data.ownerId == request.auth.uid &&
-             data.subscriptionPlan in ['Basic', 'Pro', 'Premium'];
+      return hasRequiredFields(['ownerUid', 'shopName', 'plan']) &&
+             data.ownerUid == request.auth.uid &&
+             data.plan in ['basic', 'pro', 'premium'];
     }
 
     function isValidProduct(data) {
-      return hasRequiredFields(['id', 'shopId', 'name', 'price', 'stock']) &&
+      return hasRequiredFields(['shopId', 'name', 'price', 'quantity']) &&
              data.price is number && data.price >= 0 &&
-             data.stock is int && data.stock >= 0;
+             data.quantity is number && data.quantity >= 0;
     }
 
     function isValidOrder(data) {
-      return hasRequiredFields(['id', 'customerId', 'shopId', 'items', 'totalAmount']) &&
+      return hasRequiredFields(['customerId', 'shopId', 'items', 'totalAmount']) &&
              data.totalAmount is number && data.totalAmount >= 0;
     }
 
@@ -100,6 +98,10 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin() || ('shop_id' in request.resource.data && isShopOwner(request.resource.data.shop_id)));
       allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin() || ('shop_id' in resource.data && isShopOwner(resource.data.shop_id)));
       allow delete: if isAdmin() || (isAuthenticated() && 'shop_id' in resource.data && isShopOwner(resource.data.shop_id));
+    }
+
+    match /admins/{adminId} {
+      allow read: if isOwner(adminId) || isAdmin();
     }
 
     match /shops/{shopId} {

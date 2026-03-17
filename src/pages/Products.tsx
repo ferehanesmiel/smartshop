@@ -164,7 +164,7 @@ const Products = () => {
       vatType: formData.vatType,
       isPublishedToMarketplace: formData.isPublishedToMarketplace,
       shopId: shop.shopId,
-      shopName: shop.shopName,
+      shopName: shop.shopName || 'Unknown Shop',
       slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
       createdAt: new Date().toISOString(),
     };

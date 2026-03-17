@@ -179,16 +179,16 @@ const POS = () => {
     const saleData: any = {
       shopId: shop.shopId,
       items: cartWithCalculations.map(item => ({
-        productId: item.productId,
-        productName: item.productName,
-        quantity: item.quantity,
-        price: item.price,
+        productId: item.productId || '',
+        productName: item.productName || '',
+        quantity: item.quantity || 1,
+        price: item.price || 0,
         costPrice: item.costPrice || 0,
-        vatRate: item.vatRate,
-        vatType: item.vatType,
-        vatAmount: item.vatAmount,
-        netPrice: item.netPrice,
-        profit: item.profit
+        vatRate: item.vatRate || 0,
+        vatType: item.vatType || 'exclusive',
+        vatAmount: item.vatAmount || 0,
+        netPrice: item.netPrice || 0,
+        profit: item.profit || 0
       })),
       subtotal,
       discount,
@@ -260,8 +260,8 @@ const POS = () => {
         paymentMethod: saleData.paymentMethod,
         amountPaid: saleData.amountPaid,
         changeAmount: saleData.changeAmount,
-        createdAt: saleData.createdAt,
-        shopName: shop.shopName,
+        createdAt: saleData.createdAt || new Date().toISOString(),
+        shopName: shop.shopName || 'Unknown Shop',
       };
 
       if (customerPhone) receiptData.customerPhone = customerPhone;

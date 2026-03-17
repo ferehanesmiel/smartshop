@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { SubscriptionProvider } from './SubscriptionContext';
 import { CartProvider } from './CartContext';
@@ -87,6 +87,7 @@ export default function App() {
             <Router>
               <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />

@@ -14,6 +14,47 @@
   }
 }
 
+@layer utilities {
+  @media (max-width: 767px) {
+    .responsive-table {
+      display: block;
+      width: 100%;
+    }
+    .responsive-table thead {
+      display: none;
+    }
+    .responsive-table tbody, .responsive-table tr, .responsive-table td {
+      display: block;
+      width: 100%;
+    }
+    .responsive-table tr {
+      margin-bottom: 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background-color: #ffffff;
+      padding: 0.5rem;
+    }
+    .responsive-table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+      text-align: right;
+    }
+    .responsive-table td:last-child {
+      border-bottom: none;
+    }
+    .responsive-table td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #4b5563;
+      text-align: left;
+      margin-right: 1rem;
+    }
+  }
+}
+
 .glass {
   @apply bg-white/80 backdrop-blur-md border border-white/20;
 }

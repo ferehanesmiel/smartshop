@@ -58,7 +58,7 @@ const MarketplaceShop = () => {
             where('isPublishedToMarketplace', '==', true)
           );
           const productsSnapshot = await getDocs(productsQuery);
-          const productsData = productsSnapshot.docs.map(doc => doc.data() as Product);
+          const productsData = productsSnapshot.docs.map(doc => ({ id: doc.id, productId: doc.id, ...doc.data() }) as Product);
           setProducts(productsData);
         }
       } catch (error) {

@@ -121,6 +121,14 @@ const LandingPage = () => {
     },
   ];
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -137,11 +145,11 @@ const LandingPage = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#" className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Home</a>
-              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Features</a>
-              <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Pricing</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Home</a>
+              <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Features</a>
+              <a href="#pricing" onClick={(e) => scrollToSection(e, 'pricing')} className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Pricing</a>
               <Link to="/marketplace" className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Marketplace</Link>
-              <a href="#contact" className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Contact</a>
+              <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="text-sm font-medium text-slate-600 hover:text-[#ff6600] transition-colors">Contact</a>
               <div className="h-6 w-px bg-slate-200 mx-2"></div>
               <Link to="/login" className="text-sm font-semibold text-slate-700 hover:text-[#ff6600] transition-colors">Login</Link>
               <Link to="/register" className="bg-[#ff6600] hover:bg-[#e65c00] text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-orange-200 hover:scale-105 active:scale-95">
@@ -179,7 +187,7 @@ const LandingPage = () => {
                   Start Free Trial
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <a href="#pricing" className="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-4 rounded-full text-lg font-bold transition-all hover:scale-105 active:scale-95 flex items-center justify-center">
+                <a href="#pricing" onClick={(e) => scrollToSection(e, 'pricing')} className="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-4 rounded-full text-lg font-bold transition-all hover:scale-105 active:scale-95 flex items-center justify-center">
                   View Pricing
                 </a>
               </div>
@@ -463,16 +471,16 @@ const LandingPage = () => {
             <div>
               <h4 className="text-white font-bold mb-6">Product</h4>
               <ul className="space-y-4 text-sm">
-                <li><a href="#features" className="hover:text-[#ff6600] transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-[#ff6600] transition-colors">Pricing</a></li>
+                <li><a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="hover:text-[#ff6600] transition-colors">Features</a></li>
+                <li><a href="#pricing" onClick={(e) => scrollToSection(e, 'pricing')} className="hover:text-[#ff6600] transition-colors">Pricing</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-white font-bold mb-6">Company</h4>
               <ul className="space-y-4 text-sm">
-                <li><a href="#" className="hover:text-[#ff6600] transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-[#ff6600] transition-colors">Privacy Policy</a></li>
+                <li><a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="hover:text-[#ff6600] transition-colors">Contact</a></li>
+                <li><a href="#" onClick={(e) => e.preventDefault()} className="hover:text-[#ff6600] transition-colors">Privacy Policy</a></li>
               </ul>
             </div>
 

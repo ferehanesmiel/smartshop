@@ -50,12 +50,12 @@ const MarketplaceCheckout = () => {
           customerPhone: formData.customerPhone,
           customerAddress: formData.customerAddress,
           items: shopItems.map(item => ({
-            productId: item.productId,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            imageUrl: item.imageUrl,
-            shopId: item.shopId
+            productId: item.productId || '',
+            name: item.name || '',
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            imageUrl: item.imageUrl || null,
+            shopId: item.shopId || ''
           })),
           totalAmount,
           vatAmount: totalAmount * 0.15,

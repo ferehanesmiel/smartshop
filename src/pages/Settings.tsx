@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, onSnapshot, collection, addDoc, deleteDoc, query, where, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, collection, addDoc, setDoc, deleteDoc, query, where, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, auth, secondaryAuth } from '../firebase';
 import { useAuth } from '../AuthContext';
@@ -182,7 +182,7 @@ const Settings = () => {
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, userFormData.email, userFormData.password);
       
       // Add user to Firestore
-      await addDoc(collection(db, 'users'), {
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
         name: userFormData.name,
         email: userFormData.email,
         phone: userFormData.phone,
