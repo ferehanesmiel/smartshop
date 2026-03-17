@@ -313,6 +313,14 @@ const Dashboard = () => {
       color: "text-purple-600", 
       bg: "bg-purple-50"
     },
+    { 
+      title: "Marketplace", 
+      value: shop?.isMarketplaceEnabled ? "Active" : "Inactive", 
+      icon: Store, 
+      color: "text-emerald-600", 
+      bg: "bg-emerald-50",
+      link: "/dashboard/marketplace"
+    },
   ];
 
   const planKey = (shop?.plan && PLANS[shop.plan as PlanType]) ? (shop.plan as PlanType) : 'basic';
@@ -411,34 +419,45 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cards.map((card, i) => (
-          <motion.div
-            key={card.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className={`w-12 h-12 ${card.bg} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                <card.icon className={`${card.color} w-6 h-6`} />
-              </div>
-              {card.trend && (
-                <div className={cn(
-                  "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg",
-                  card.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-                )}>
-                  {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {card.trend}
+        {cards.map((card, i) => {
+          const CardContent = (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group h-full"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className={`w-12 h-12 ${card.bg} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <card.icon className={`${card.color} w-6 h-6`} />
                 </div>
-              )}
-            </div>
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{card.title}</p>
-            <p className={`text-2xl font-bold mt-1 ${card.alert ? 'text-amber-600' : 'text-gray-900'}`}>
-              {card.value}
-            </p>
-          </motion.div>
-        ))}
+                {card.trend && (
+                  <div className={cn(
+                    "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg",
+                    card.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                  )}>
+                    {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                    {card.trend}
+                  </div>
+                )}
+              </div>
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{card.title}</p>
+              <p className={`text-2xl font-bold mt-1 ${card.alert ? 'text-amber-600' : 'text-gray-900'}`}>
+                {card.value}
+              </p>
+            </motion.div>
+          );
+
+          if (card.link) {
+            return (
+              <Link key={card.title} to={card.link}>
+                {CardContent}
+              </Link>
+            );
+          }
+
+          return <div key={card.title}>{CardContent}</div>;
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

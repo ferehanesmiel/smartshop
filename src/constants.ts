@@ -6,6 +6,7 @@ export const PLANS = {
       users: 2,
       products: 500,
       branches: 1,
+      marketplaceProducts: 10,
     },
     features: {
       multiBranch: false,
@@ -23,6 +24,7 @@ export const PLANS = {
       users: 5,
       products: 3000,
       branches: 1,
+      marketplaceProducts: 50,
     },
     features: {
       multiBranch: false,
@@ -40,6 +42,7 @@ export const PLANS = {
       users: Infinity,
       products: Infinity,
       branches: Infinity,
+      marketplaceProducts: Infinity,
     },
     features: {
       multiBranch: true,

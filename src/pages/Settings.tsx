@@ -47,6 +47,8 @@ const Settings = () => {
     email: '',
     description: '',
     logoUrl: '',
+    bannerUrl: '',
+    category: '',
     isMarketplaceEnabled: false,
     isVatEnabled: false,
     vatRate: 15,
@@ -86,6 +88,8 @@ const Settings = () => {
         email: shop.email || '',
         description: shop.description || '',
         logoUrl: shop.logoUrl || '',
+        bannerUrl: shop.bannerUrl || '',
+        category: shop.category || '',
         isMarketplaceEnabled: shop.isMarketplaceEnabled || false,
         isVatEnabled: shop.isVatEnabled || false,
         vatRate: shop.vatRate || 15,
@@ -386,6 +390,23 @@ const Settings = () => {
                     />
                   </div>
                   <div className="sm:col-span-2 space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    >
+                      <option value="">Select a category</option>
+                      <option value="Electronics">Electronics</option>
+                      <option value="Clothing">Clothing</option>
+                      <option value="Groceries">Groceries</option>
+                      <option value="Home Goods">Home Goods</option>
+                      <option value="Pharmacy">Pharmacy</option>
+                      <option value="Restaurant">Restaurant</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2 space-y-2">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Logo URL</label>
                     <input
                       type="url"
@@ -393,6 +414,16 @@ const Settings = () => {
                       onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                       placeholder="https://example.com/logo.png"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Banner URL (Marketplace)</label>
+                    <input
+                      type="url"
+                      value={formData.bannerUrl}
+                      onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                      placeholder="https://example.com/banner.png"
                     />
                   </div>
                   <div className="sm:col-span-2 flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">

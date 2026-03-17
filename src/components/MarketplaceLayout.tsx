@@ -1,126 +1,126 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, Outlet } from 'react-router-dom';
-import { ShoppingCart, Search, Menu, X, Store, LayoutDashboard } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import React from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { ShoppingCart, Store, Search, User, Menu, X, LayoutDashboard } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { useAuth } from '../AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MarketplaceLayout = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
-  const { cart } = useCart();
-  const { user } = useAuth();
+  const { totalItems } = useCart();
+  const { user, shop } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const location = useLocation();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/shops?search=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
-  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
+  const navLinks = [
+    { name: 'Home', path: '/marketplace' },
+    { name: 'Shops', path: '/shops' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
+    <div className="min-h-screen flex flex-col font-sans text-gray-900">
+      {/* Top Navigation */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
-            {/* Logo */}
-            <Link to="/marketplace" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                <Store className="w-5 h-5 text-white" />
+        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link to="/marketplace" className="flex items-center gap-2 group">
+              <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-600/20 group-hover:scale-110 transition-transform">
+                <Store size={24} />
               </div>
-              <span className="font-bold text-xl text-gray-900 hidden sm:block">SmartShop Market</span>
+              <span className="text-xl font-bold tracking-tight">SmartShop <span className="text-emerald-600">Market</span></span>
             </Link>
 
-            {/* Search Bar */}
-            <div className="flex-1 max-w-2xl hidden md:block">
-              <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search products or shops..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-transparent rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
-                />
-              </form>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-4">
-              {user && (
-                <Link to="/dashboard" className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl font-bold hover:bg-emerald-100 transition-all border border-emerald-100">
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
+            <nav className="hidden md:flex items-center gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`font-medium transition-colors ${
+                    location.pathname === link.path ? 'text-emerald-600' : 'text-gray-500 hover:text-emerald-600'
+                  }`}
+                >
+                  {link.name}
                 </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-3 md:gap-6">
+            <Link to="/marketplace/cart" className="relative p-2 text-gray-500 hover:text-emerald-600 transition-colors">
+              <ShoppingCart size={24} />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                  {totalItems}
+                </span>
               )}
-
-              <Link to="/shops" className="text-sm font-bold text-gray-600 hover:text-emerald-600 hidden sm:block">
-                All Shops
-              </Link>
-              
-              <Link to="/checkout" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
-                <ShoppingCart className="w-6 h-6" />
-                {cartItemCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform translate-x-1 -translate-y-1">
-                    {cartItemCount}
-                  </span>
-                )}
-              </Link>
-
-              {/* Mobile Menu Toggle */}
-              <button 
-                className="md:hidden p-2 text-gray-600"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            </Link>
+            
+            {user && shop && (
+              <Link 
+                to="/dashboard" 
+                className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
               >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
+                <LayoutDashboard size={18} />
+                Dashboard
+              </Link>
+            )}
+
+            {!user && (
+              <Link 
+                to="/login" 
+                className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all"
+              >
+                <User size={18} />
+                Seller Login
+              </Link>
+            )}
+
+            <button 
+              className="md:hidden p-2 text-gray-500"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
 
-        {/* Mobile Search & Menu */}
+        {/* Mobile Menu */}
         <AnimatePresence>
-          {isMobileMenuOpen && (
+          {isMenuOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="md:hidden border-t border-gray-100 bg-white overflow-hidden"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
             >
               <div className="p-4 space-y-4">
-                <form onSubmit={handleSearch} className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search products or shops..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-gray-100 border-transparent rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
-                  />
-                </form>
-                <div className="flex flex-col gap-2">
-                  {user && (
-                    <Link 
-                      to="/dashboard" 
-                      className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 font-bold rounded-xl"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <LayoutDashboard className="w-5 h-5" />
-                      Dashboard
-                    </Link>
-                  )}
-                  <Link 
-                    to="/shops" 
-                    className="px-4 py-2 text-gray-600 font-bold hover:bg-gray-50 rounded-lg"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block py-2 text-lg font-medium text-gray-600"
                   >
-                    All Shops
+                    {link.name}
                   </Link>
-                </div>
+                ))}
+                {user && shop && (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block py-3 text-center bg-emerald-600 text-white font-bold rounded-xl"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                {!user && (
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block py-3 text-center bg-emerald-600 text-white font-bold rounded-xl"
+                  >
+                    Seller Login
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}
@@ -133,9 +133,47 @@ const MarketplaceLayout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 py-8 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} SmartShop Ethiopia Marketplace. All rights reserved.</p>
+      <footer className="bg-white border-t border-gray-100 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="col-span-1 md:col-span-2">
+              <Link to="/marketplace" className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white">
+                  <Store size={20} />
+                </div>
+                <span className="text-xl font-bold tracking-tight">SmartShop <span className="text-emerald-600">Market</span></span>
+              </Link>
+              <p className="text-gray-500 max-w-sm leading-relaxed">
+                The leading e-commerce marketplace in Ethiopia, connecting local shops with customers nationwide. 
+                Powered by SmartShop Ethiopia SaaS.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900 mb-6 uppercase text-xs tracking-widest">Marketplace</h4>
+              <ul className="space-y-4 text-gray-500 text-sm">
+                <li><Link to="/marketplace" className="hover:text-emerald-600 transition-colors">Home</Link></li>
+                <li><Link to="/shops" className="hover:text-emerald-600 transition-colors">All Shops</Link></li>
+                <li><Link to="/marketplace?category=Electronics" className="hover:text-emerald-600 transition-colors">Electronics</Link></li>
+                <li><Link to="/marketplace?category=Clothing" className="hover:text-emerald-600 transition-colors">Clothing</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900 mb-6 uppercase text-xs tracking-widest">For Sellers</h4>
+              <ul className="space-y-4 text-gray-500 text-sm">
+                <li><Link to="/register" className="hover:text-emerald-600 transition-colors">Register Shop</Link></li>
+                <li><Link to="/login" className="hover:text-emerald-600 transition-colors">Seller Login</Link></li>
+                <li><Link to="/" className="hover:text-emerald-600 transition-colors">Platform Features</Link></li>
+                <li><Link to="/" className="hover:text-emerald-600 transition-colors">Pricing Plans</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+            <p>© 2026 SmartShop Ethiopia. All rights reserved.</p>
+            <div className="flex gap-8">
+              <Link to="/" className="hover:text-emerald-600 transition-colors">Privacy Policy</Link>
+              <Link to="/" className="hover:text-emerald-600 transition-colors">Terms of Service</Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

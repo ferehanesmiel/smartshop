@@ -25,6 +25,8 @@ export interface Shop {
   slug: string;
   description?: string;
   logoUrl?: string;
+  bannerUrl?: string;
+  category?: string;
   isMarketplaceEnabled?: boolean;
   isVatEnabled?: boolean;
   vatRate?: number;
@@ -61,7 +63,8 @@ export interface Product {
   imageUrl?: string;
   description?: string;
   createdAt: string;
-  slug?: string;
+  slug: string;
+  isPublishedToMarketplace?: boolean;
   shopName?: string;
   vatRate?: number;
   vatType?: 'inclusive' | 'exclusive';
@@ -127,8 +130,9 @@ export interface Order {
   note?: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'preparing';
   paymentMethod?: 'cod' | 'telebirr' | 'bank_transfer';
+  paymentStatus?: 'pending' | 'paid' | 'failed';
   createdAt: string;
   isMarketplaceOrder?: boolean;
 }

@@ -21,6 +21,11 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "ownerUid": { "type": "string" },
         "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "category": { "type": "string" },
+        "isMarketplaceEnabled": { "type": "boolean" },
         "currentProductCount": { "type": "integer" },
         "currentUserCount": { "type": "integer" },
         "currentBranchCount": { "type": "integer" }
@@ -58,6 +63,9 @@
         "category": { "type": "string" },
         "barcode": { "type": "string" },
         "imageUrl": { "type": "string" },
+        "description": { "type": "string" },
+        "slug": { "type": "string" },
+        "isPublishedToMarketplace": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["productId", "shopId", "name", "price", "quantity"]
@@ -114,7 +122,10 @@
         "customerName": { "type": "string" },
         "items": { "type": "array" },
         "totalAmount": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "accepted", "delivered", "cancelled"] },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "preparing", "delivered", "cancelled"] },
+        "paymentMethod": { "type": "string", "enum": ["cod", "telebirr", "bank_transfer"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed"] },
+        "isMarketplaceOrder": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["orderId", "shopId", "customerPhone", "items", "totalAmount", "status", "createdAt"]

@@ -32,10 +32,14 @@ import AdminRevenue from './pages/AdminRevenue';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
 import MarketplaceLayout from './components/MarketplaceLayout';
-import MarketplaceHome from './pages/MarketplaceHome';
-import MarketplaceShops from './pages/MarketplaceShops';
+import Marketplace from './pages/Marketplace';
+import ShopsDirectory from './pages/ShopsDirectory';
+import MarketplaceShop from './pages/MarketplaceShop';
 import MarketplaceProduct from './pages/MarketplaceProduct';
+import MarketplaceCart from './pages/MarketplaceCart';
 import MarketplaceCheckout from './pages/MarketplaceCheckout';
+import OnlineOrders from './pages/OnlineOrders';
+import MarketplaceDashboard from './pages/MarketplaceDashboard';
 import { CartProvider } from './CartContext';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -65,11 +69,12 @@ export default function App() {
               
               {/* Marketplace Routes */}
               <Route element={<MarketplaceLayout />}>
-                <Route path="/marketplace" element={<MarketplaceHome />} />
-                <Route path="/shops" element={<MarketplaceShops />} />
-                <Route path="/shop/:slug" element={<MiniStore />} />
-                <Route path="/product/:productId" element={<MarketplaceProduct />} />
-                <Route path="/checkout" element={<MarketplaceCheckout />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/shops" element={<ShopsDirectory />} />
+                <Route path="/shop/:slug" element={<MarketplaceShop />} />
+                <Route path="/product/:slug" element={<MarketplaceProduct />} />
+                <Route path="/marketplace/cart" element={<MarketplaceCart />} />
+                <Route path="/marketplace/checkout" element={<MarketplaceCheckout />} />
               </Route>
               
               <Route path="/dashboard" element={
@@ -139,6 +144,20 @@ export default function App() {
             <ProtectedRoute>
               <Layout>
                 <Branches />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/marketplace" element={
+            <ProtectedRoute>
+              <Layout>
+                <MarketplaceDashboard />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/online-orders" element={
+            <ProtectedRoute>
+              <Layout>
+                <OnlineOrders />
               </Layout>
             </ProtectedRoute>
           } />

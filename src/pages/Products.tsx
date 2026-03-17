@@ -13,7 +13,8 @@ import {
   X,
   Image as ImageIcon,
   QrCode,
-  AlertCircle
+  AlertCircle,
+  Store
 } from 'lucide-react';
 import { Product } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -33,6 +34,10 @@ const Products = () => {
 
   const productLimit = getLimit('products');
   const limitReached = isLimitReached('products', products.length);
+  
+  const marketplaceLimit = getLimit('marketplaceProducts');
+  const publishedProductsCount = products.filter(p => p.isPublishedToMarketplace).length;
+  const marketplaceLimitReached = isLimitReached('marketplaceProducts', publishedProductsCount);
 
   const handleScan = (barcode: string) => {
     if (isModalOpen) {
@@ -56,6 +61,7 @@ const Products = () => {
     barcode: '',
     vatRate: '15',
     vatType: 'inclusive' as 'inclusive' | 'exclusive',
+    isPublishedToMarketplace: false,
   });
 
   useEffect(() => {
@@ -94,6 +100,7 @@ const Products = () => {
         barcode: product.barcode || '',
         vatRate: (product.vatRate ?? 15).toString(),
         vatType: product.vatType || 'inclusive',
+        isPublishedToMarketplace: product.isPublishedToMarketplace || false,
       });
     } else {
       setEditingProduct(null);
@@ -108,9 +115,25 @@ const Products = () => {
         barcode: '',
         vatRate: '15',
         vatType: 'inclusive',
+        isPublishedToMarketplace: false,
       });
     }
     setIsModalOpen(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for base64
+        alert('Image size too large. Please choose an image under 1MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,6 +151,7 @@ const Products = () => {
       barcode: formData.barcode,
       vatRate: parseFloat(formData.vatRate),
       vatType: formData.vatType,
+      isPublishedToMarketplace: formData.isPublishedToMarketplace,
       shopId: shop.shopId,
       shopName: shop.shopName,
       slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
@@ -264,6 +288,12 @@ const Products = () => {
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
+                {product.isPublishedToMarketplace && (
+                  <div className="absolute top-2 left-2 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">
+                    <Store className="w-3 h-3" />
+                    Marketplace
+                  </div>
+                )}
                 {product.quantity <= 5 && (
                   <div className="absolute bottom-2 left-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
                     Low Stock
@@ -427,14 +457,76 @@ const Products = () => {
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
-                    <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                      placeholder="https://..."
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                    <div className="flex flex-col gap-3">
+                      {formData.image && (
+                        <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200">
+                          <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                          <button 
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          id="image-upload"
+                        />
+                        <label
+                          htmlFor="image-upload"
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 border-dashed rounded-xl cursor-pointer hover:bg-gray-100 transition-all"
+                        >
+                          <ImageIcon className="w-5 h-5 text-gray-400" />
+                          <span className="text-sm text-gray-600">Upload Image</span>
+                        </label>
+                        <div className="flex-1">
+                          <input
+                            type="url"
+                            value={formData.image.startsWith('data:') ? '' : formData.image}
+                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                            placeholder="Or paste URL..."
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-400">Recommended: Square image, max 1MB</p>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer group ${
+                      formData.isPublishedToMarketplace 
+                        ? 'bg-emerald-50 border-emerald-100' 
+                        : 'bg-gray-50 border-gray-100'
+                    } ${!formData.isPublishedToMarketplace && marketplaceLimitReached ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={formData.isPublishedToMarketplace}
+                        disabled={!formData.isPublishedToMarketplace && marketplaceLimitReached}
+                        onChange={(e) => {
+                          if (e.target.checked && marketplaceLimitReached) {
+                            alert(`Marketplace product limit reached (${marketplaceLimit}). Please upgrade your plan.`);
+                            return;
+                          }
+                          setFormData({ ...formData, isPublishedToMarketplace: e.target.checked });
+                        }}
+                        className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <p className="font-bold text-emerald-900">Publish to Online Marketplace</p>
+                        <p className="text-xs text-emerald-600">
+                          {marketplaceLimitReached && !formData.isPublishedToMarketplace 
+                            ? `Limit reached (${marketplaceLimit})` 
+                            : 'Make this product visible to customers in the marketplace'}
+                        </p>
+                      </div>
+                    </label>
                   </div>
                 </div>
                 <div className="pt-4 flex gap-3">

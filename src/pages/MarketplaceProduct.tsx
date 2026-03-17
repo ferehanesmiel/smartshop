@@ -1,193 +1,175 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Product, Shop } from '../types';
-import { ShoppingCart, ArrowLeft, Store, Star, Truck, ShieldCheck } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useCart } from '../CartContext';
+import { Package, ShoppingCart, Store, ChevronLeft, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const MarketplaceProduct = () => {
-  const { productId } = useParams<{ productId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    const fetchProductAndShop = async () => {
-      if (!productId) return;
+    const fetchProductData = async () => {
+      if (!slug) return;
       
       try {
-        const productDoc = await getDoc(doc(db, 'products', productId));
-        if (productDoc.exists()) {
-          const productData = { productId: productDoc.id, ...productDoc.data() } as Product;
+        const productQuery = query(
+          collection(db, 'products'),
+          where('slug', '==', slug),
+          limit(1)
+        );
+        const productSnapshot = await getDocs(productQuery);
+        
+        if (!productSnapshot.empty) {
+          const productData = productSnapshot.docs[0].data() as Product;
           setProduct(productData);
-
+          
           // Fetch shop details
-          const shopDoc = await getDoc(doc(db, 'shops', productData.shopId));
-          if (shopDoc.exists()) {
-            const shopData = { shopId: shopDoc.id, ...shopDoc.data() } as Shop;
-            if (!shopData.isMarketplaceEnabled || shopData.status !== 'active' || shopData.plan !== 'premium') {
-              setProduct(null); // Hide product if shop is inactive
-              setLoading(false);
-              return;
-            }
-            setShop(shopData);
+          const shopQuery = query(
+            collection(db, 'shops'),
+            where('shopId', '==', productData.shopId),
+            limit(1)
+          );
+          const shopSnapshot = await getDocs(shopQuery);
+          if (!shopSnapshot.empty) {
+            setShop(shopSnapshot.docs[0].data() as Shop);
           }
         }
       } catch (error) {
-        console.error("Error fetching product:", error);
+        console.error('Error fetching product data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProductAndShop();
-  }, [productId]);
+    fetchProductData();
+  }, [slug]);
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
-        <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <Package size={64} className="text-gray-300 mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h1>
-        <p className="text-gray-500 mb-8">The product you're looking for doesn't exist or has been removed.</p>
-        <Link to="/shops" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all">
-          Browse Marketplace
+        <p className="text-gray-500 mb-6">The product you are looking for does not exist or has been removed.</p>
+        <Link to="/marketplace" className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors">
+          Back to Marketplace
         </Link>
       </div>
     );
   }
 
-  const handleAddToCart = () => {
-    if (!shop) return;
-    addToCart({
-      productId: product.productId,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      imageUrl: product.imageUrl,
-      shopId: shop.shopId,
-      shopName: shop.shopName
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link to="/shops" className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-emerald-600 mb-8 transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Shops
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <Link to="/marketplace" className="inline-flex items-center gap-2 text-gray-500 hover:text-emerald-600 transition-colors mb-8">
+          <ChevronLeft size={20} />
+          Back to Marketplace
         </Link>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
-          {/* Product Image */}
-          <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-gray-50 relative">
-            {product.imageUrl ? (
-              <img 
-                src={product.imageUrl} 
-                alt={product.name} 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-300">
-                <Store className="w-24 h-24" />
-              </div>
-            )}
-          </div>
-
-          {/* Product Details */}
-          <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col">
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-bold text-emerald-600 uppercase tracking-wider">
-                  {product.category}
-                </p>
-                <div className="flex items-center gap-1 text-amber-400">
-                  <Star className="w-4 h-4 fill-current" />
-                  <span className="text-sm font-bold text-gray-700">4.8</span>
-                  <span className="text-xs text-gray-400">(124 reviews)</span>
-                </div>
-              </div>
-              
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
-              
-              <div className="flex items-baseline gap-4 mb-8">
-                <span className="text-4xl font-bold text-gray-900">
-                  {product.price.toLocaleString()} ETB
-                </span>
-                {product.quantity > 0 ? (
-                  <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
-                    In Stock ({product.quantity})
-                  </span>
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            {/* Product Image */}
+            <div className="p-8 lg:p-12 bg-gray-50 flex items-center justify-center">
+              <div className="relative aspect-square w-full max-w-md rounded-2xl overflow-hidden shadow-lg bg-white">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
                 ) : (
-                  <span className="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">
-                    Out of Stock
-                  </span>
+                  <div className="w-full h-full flex items-center justify-center text-gray-200">
+                    <Package size={120} />
+                  </div>
                 )}
               </div>
-              
-              {product.description && (
-                <div className="mb-8">
-                  <h3 className="text-sm font-bold text-gray-900 mb-3">Description</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {product.description}
-                  </p>
-                </div>
-              )}
+            </div>
 
-              {/* Shop Info */}
-              {shop && (
-                <div className="bg-gray-50 rounded-2xl p-4 mb-8 flex items-center gap-4 border border-gray-100">
-                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 shrink-0">
-                    {shop.logoUrl ? (
-                      <img src={shop.logoUrl} alt={shop.shopName} className="w-full h-full object-cover" />
-                    ) : (
-                      <Store className="w-6 h-6 text-gray-400" />
-                    )}
+            {/* Product Info */}
+            <div className="p-8 lg:p-12">
+              <div className="mb-8">
+                <Link 
+                  to={shop ? `/shop/${shop.slug}` : '#'} 
+                  className="inline-flex items-center gap-2 text-emerald-600 font-medium hover:underline mb-4"
+                >
+                  <Store size={18} />
+                  {shop?.shopName || 'Unknown Shop'}
+                </Link>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="text-3xl font-bold text-emerald-600">{product.price.toLocaleString()} ETB</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${product.quantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                    {product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}
+                  </span>
+                </div>
+                <p className="text-gray-600 leading-relaxed">
+                  {product.description || 'No description available for this product.'}
+                </p>
+              </div>
+
+              {product.quantity > 0 && (
+                <div className="space-y-6 mb-10">
+                  <div className="flex items-center gap-4">
+                    <span className="font-medium text-gray-900">Quantity:</span>
+                    <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="px-4 py-2 hover:bg-gray-50 text-gray-600 transition-colors"
+                      >
+                        -
+                      </button>
+                      <span className="px-6 py-2 font-bold text-gray-900 border-x border-gray-200">{quantity}</span>
+                      <button
+                        onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
+                        className="px-4 py-2 hover:bg-gray-50 text-gray-600 transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Sold by</p>
-                    <Link to={`/shop/${shop.slug}`} className="font-bold text-gray-900 hover:text-emerald-600 transition-colors truncate block">
-                      {shop.shopName}
-                    </Link>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button className="flex-1 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+                      <ShoppingCart size={20} />
+                      Add to Cart
+                    </button>
+                    <button className="flex-1 py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20">
+                      Buy Now
+                    </button>
                   </div>
-                  <Link to={`/shop/${shop.slug}`} className="text-sm font-bold text-emerald-600 hover:text-emerald-700">
-                    Visit Shop
-                  </Link>
                 </div>
               )}
 
               {/* Trust Badges */}
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Truck className="w-5 h-5 text-emerald-600" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t border-gray-100">
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <ShieldCheck className="text-emerald-600" size={20} />
+                  <span>Secure Payment</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <Truck className="text-emerald-600" size={20} />
                   <span>Fast Delivery</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                  <span>Secure Payment</span>
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <RotateCcw className="text-emerald-600" size={20} />
+                  <span>Easy Returns</span>
                 </div>
               </div>
             </div>
-
-            <button
-              onClick={handleAddToCart}
-              disabled={product.quantity <= 0}
-              className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {product.quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
-            </button>
           </div>
         </div>
       </div>
