@@ -11,13 +11,39 @@
         "phone": { "type": "string" },
         "email": { "type": "string" },
         "address": { "type": "string" },
+        "logo": { "type": "string" },
         "subscriptionPlan": { "type": "string", "enum": ["basic", "pro", "premium"] },
+        "subscriptionStatus": { "type": "string", "enum": ["active", "expired", "trial"] },
+        "subscriptionStartDate": { "type": "string", "format": "date-time" },
+        "subscriptionExpiryDate": { "type": "string", "format": "date-time" },
+        "onlineStoreEnabled": { "type": "boolean" },
         "status": { "type": "string", "enum": ["active", "suspended"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "ownerUid": { "type": "string" },
-        "slug": { "type": "string" }
+        "slug": { "type": "string" },
+        "currentProductCount": { "type": "integer" },
+        "currentUserCount": { "type": "integer" },
+        "currentBranchCount": { "type": "integer" }
       },
       "required": ["shopId", "shopName", "ownerName", "phone", "email", "ownerUid", "slug"]
+    },
+    "SubscriptionPlan": {
+      "title": "Subscription Plan",
+      "description": "Definition of a subscription package",
+      "type": "object",
+      "properties": {
+        "planId": { "type": "string" },
+        "planName": { "type": "string" },
+        "monthlyPrice": { "type": "number" },
+        "maxUsers": { "type": "integer" },
+        "maxProducts": { "type": "integer" },
+        "multiBranchEnabled": { "type": "boolean" },
+        "advancedReportsEnabled": { "type": "boolean" },
+        "onlineStoreEnabled": { "type": "boolean" },
+        "smsNotificationsEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["planId", "planName", "monthlyPrice", "maxUsers", "maxProducts"]
     },
     "Product": {
       "title": "Product",
@@ -154,6 +180,10 @@
     "/shops/{shopId}": {
       "schema": "Shop",
       "description": "Main shop metadata"
+    },
+    "/subscriptionPlans/{planId}": {
+      "schema": "SubscriptionPlan",
+      "description": "Available subscription plans"
     },
     "/products/{productId}": {
       "schema": "Product",

@@ -268,7 +268,7 @@ const POS = () => {
       await addDoc(collection(db, 'receipts'), receiptData);
 
       // 5. Send SMS Notification
-      if (customerPhone) {
+      if (customerPhone && isFeatureAllowed('smsNotifications')) {
         sendSMS({
           to: customerPhone,
           message: `Thank you for shopping at ${shop.shopName}. Your purchase total is ${grandTotal} ETB. Visit again!`,

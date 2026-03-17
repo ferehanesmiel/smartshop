@@ -24,16 +24,23 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { Branch } from '../types';
+import { increment } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 
 const Branches = () => {
   const { shop } = useAuth();
+  const { isLimitReached, getLimit, currentPlanKey } = useSubscription();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const branchLimitReached = isLimitReached('branches');
+  const branchLimit = getLimit('branches');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -63,6 +70,11 @@ const Branches = () => {
     e.preventDefault();
     if (!shop) return;
 
+    if (!editingBranch && branchLimitReached) {
+      setError(`You have reached the branch limit (${branchLimit === Infinity ? 'Unlimited' : branchLimit}) for your ${currentPlanKey} plan.`);
+      return;
+    }
+
     try {
       if (editingBranch) {
         const branchRef = doc(db, 'branches', editingBranch.branchId);
@@ -76,9 +88,15 @@ const Branches = () => {
           shopId: shop.shopId,
           createdAt: new Date().toISOString()
         });
+        
+        // Increment branch count
+        await updateDoc(doc(db, 'shops', shop.shopId), {
+          currentBranchCount: increment(1)
+        });
       }
       setIsModalOpen(false);
       setEditingBranch(null);
+      setError(null);
       setFormData({
         name: '',
         address: '',
@@ -88,6 +106,7 @@ const Branches = () => {
       });
     } catch (error) {
       console.error('Error saving branch:', error);
+      setError('Failed to save branch.');
     }
   };
 
@@ -95,6 +114,10 @@ const Branches = () => {
     if (window.confirm('Are you sure you want to delete this branch?')) {
       try {
         await deleteDoc(doc(db, 'branches', branchId));
+        // Decrement branch count
+        await updateDoc(doc(db, 'shops', shop!.shopId), {
+          currentBranchCount: increment(-1)
+        });
       } catch (error) {
         console.error('Error deleting branch:', error);
       }
@@ -240,7 +263,10 @@ const Branches = () => {
                   {editingBranch ? 'Edit Branch' : 'Add New Branch'}
                 </h2>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setError(null);
+                  }}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all"
                 >
                   <AlertCircle className="w-6 h-6 text-gray-400 rotate-45" />
@@ -248,6 +274,12 @@ const Branches = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Branch Name</label>
                   <input

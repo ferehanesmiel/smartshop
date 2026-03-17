@@ -1,58 +1,56 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { PlanType } from './constants';
+import { PLANS, PlanType } from './constants';
 
 interface SubscriptionContextType {
-  loading: boolean;
-  isFeatureAllowed: (feature: string) => boolean;
+  isFeatureAllowed: (feature: keyof typeof PLANS.basic.features) => boolean;
+  isLimitReached: (limit: keyof typeof PLANS.basic.limits, currentCount: number) => boolean;
+  getLimit: (limit: keyof typeof PLANS.basic.limits) => number;
+  isSubscriptionActive: boolean;
+  plan: PlanType;
 }
 
-const SubscriptionContext = createContext<SubscriptionContextType>({
-  loading: false,
-  isFeatureAllowed: () => false,
-});
+const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { shop, loading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(true);
+export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { shop } = useAuth();
 
-  useEffect(() => {
-    if (!authLoading) {
-      setLoading(false);
-    }
-  }, [authLoading]);
+  const planKey: PlanType = (shop?.plan && PLANS[shop.plan as PlanType]) ? (shop.plan as PlanType) : 'basic';
+  const currentPlan = PLANS[planKey];
 
-  const isFeatureAllowed = (feature: string): boolean => {
-    if (!shop) return false;
-    
-    // Default to basic if no plan is set or if it's an unrecognized plan
-    const plan = (shop.plan as PlanType) || 'basic';
-    
-    // If shop status is inactive or expired, restrict features
-    if (shop.status === 'inactive' || shop.subscriptionStatus === 'expired') {
-      return false;
-    }
-    
-    const features: Record<PlanType, string[]> = {
-      basic: ['inventory', 'sales-tracking', 'receipts'],
-      pro: ['inventory', 'sales-tracking', 'receipts', 'orders', 'customers', 'advanced-reports', 'discounts'],
-      premium: ['inventory', 'sales-tracking', 'receipts', 'orders', 'customers', 'advanced-reports', 'discounts', 'multi-branch', 'staff-roles', 'sms-notifications', 'api-integrations', 'custom-branding']
-    };
+  const isSubscriptionActive = shop?.subscriptionStatus === 'active' || shop?.subscriptionStatus === 'trial';
 
-    // If the plan exists in our features map, check if the feature is included
-    if (features[plan]) {
-      return features[plan].includes(feature);
-    }
+  const isFeatureAllowed = (feature: keyof typeof PLANS.basic.features) => {
+    if (!isSubscriptionActive) return false;
+    return currentPlan.features[feature];
+  };
 
-    return false;
+  const getLimit = (limit: keyof typeof PLANS.basic.limits) => {
+    return currentPlan.limits[limit];
+  };
+
+  const isLimitReached = (limit: keyof typeof PLANS.basic.limits, currentCount: number) => {
+    const max = getLimit(limit);
+    return currentCount >= max;
   };
 
   return (
-    <SubscriptionContext.Provider value={{ loading, isFeatureAllowed }}>
+    <SubscriptionContext.Provider value={{ 
+      isFeatureAllowed, 
+      isLimitReached, 
+      getLimit,
+      isSubscriptionActive,
+      plan: planKey
+    }}>
       {children}
     </SubscriptionContext.Provider>
   );
 };
 
-export const useSubscription = () => useContext(SubscriptionContext);
-
+export const useSubscription = () => {
+  const context = useContext(SubscriptionContext);
+  if (context === undefined) {
+    throw new Error('useSubscription must be used within a SubscriptionProvider');
+  }
+  return context;
+};

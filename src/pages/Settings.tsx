@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, onSnapshot, collection, addDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, collection, addDoc, deleteDoc, query, where, increment } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { 
   Store, 
   Phone, 
@@ -27,12 +28,16 @@ import { Staff } from '../types';
 
 const Settings = () => {
   const { shop } = useAuth();
+  const { isLimitReached, getLimit, plan: currentPlanKey, isFeatureAllowed } = useSubscription();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
   const [staff, setStaff] = useState<Staff[]>([]);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+
+  const userLimit = getLimit('users');
+  const userLimitReached = isLimitReached('users', staff.length + 1); // +1 for the owner
   
   const [formData, setFormData] = useState({
     shopName: '',
@@ -48,6 +53,7 @@ const Settings = () => {
     vatType: 'exclusive' as 'inclusive' | 'exclusive',
     profitCalculationMethod: 'markup' as 'markup' | 'margin',
     currency: 'ETB',
+    onlineStoreEnabled: false,
   });
 
   const [notifications, setNotifications] = useState({
@@ -86,6 +92,7 @@ const Settings = () => {
         vatType: shop.vatType || 'exclusive',
         profitCalculationMethod: shop.profitCalculationMethod || 'markup',
         currency: shop.currency || 'ETB',
+        onlineStoreEnabled: shop.onlineStoreEnabled || false,
       });
     }
   }, [shop]);
@@ -133,6 +140,11 @@ const Settings = () => {
     e.preventDefault();
     if (!shop) return;
 
+    if (userLimitReached) {
+      setError(`You have reached the user limit (${userLimit === Infinity ? 'Unlimited' : userLimit}) for your ${currentPlanKey} plan.`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -143,6 +155,12 @@ const Settings = () => {
         status: 'active',
         createdAt: new Date().toISOString()
       });
+      
+      // Increment user count
+      await updateDoc(doc(db, 'shops', shop.shopId), {
+        currentUserCount: increment(1)
+      });
+
       setIsStaffModalOpen(false);
       setStaffFormData({ name: '', email: '', role: 'cashier', phone: '' });
       setSuccess(true);
@@ -159,6 +177,10 @@ const Settings = () => {
     if (window.confirm('Are you sure you want to remove this staff member?')) {
       try {
         await deleteDoc(doc(db, 'staff', staffId));
+        // Decrement user count
+        await updateDoc(doc(db, 'shops', shop!.shopId), {
+          currentUserCount: increment(-1)
+        });
       } catch (err) {
         console.error('Delete staff error:', err);
         setError('Failed to remove staff member.');
@@ -217,11 +239,17 @@ const Settings = () => {
     setLoading(true);
     try {
       const shopRef = doc(db, 'shops', shop.shopId);
-      const planInfo = PLANS[planName.toLowerCase() as PlanType];
+      const planKey = planName.toLowerCase() as PlanType;
+      const now = new Date();
+      const expiryDate = new Date();
+      expiryDate.setDate(now.getDate() + 30);
+
       await updateDoc(shopRef, {
-        plan: planName.toLowerCase(),
-        planLimits: planInfo.limits,
-        updatedAt: new Date().toISOString()
+        plan: planKey,
+        subscriptionStatus: 'active',
+        subscriptionStartDate: now.toISOString(),
+        subscriptionExpiryDate: expiryDate.toISOString(),
+        updatedAt: now.toISOString()
       });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -241,8 +269,11 @@ const Settings = () => {
     features: [
       `${plan.limits.products === Infinity ? 'Unlimited' : plan.limits.products} Products`,
       `${plan.limits.users === Infinity ? 'Unlimited' : plan.limits.users} Users`,
-      ...plan.features
-    ],
+      plan.features.advancedReports ? 'Advanced Reports' : null,
+      plan.features.onlineStore ? 'Online Store' : null,
+      plan.features.multiBranch ? 'Multi-branch Support' : null,
+      plan.features.smsNotifications ? 'SMS Notifications' : null,
+    ].filter(Boolean) as string[],
     current: (shop?.plan || 'basic') === key
   }));
 
@@ -365,6 +396,30 @@ const Settings = () => {
                     />
                   </div>
                   <div className="sm:col-span-2 flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <input
+                      type="checkbox"
+                      id="onlineStoreEnabled"
+                      checked={formData.onlineStoreEnabled}
+                      onChange={(e) => {
+                        if (isFeatureAllowed('onlineStore')) {
+                          setFormData({ ...formData, onlineStoreEnabled: e.target.checked });
+                        } else {
+                          alert('Online Store is not available on your current plan. Please upgrade to Pro or Premium.');
+                        }
+                      }}
+                      className="w-5 h-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 disabled:opacity-50"
+                    />
+                    <div className="flex flex-col">
+                      <label htmlFor="onlineStoreEnabled" className="text-sm font-bold text-emerald-900 cursor-pointer">
+                        Enable Online Store
+                      </label>
+                      <p className="text-xs text-emerald-700 mt-1">
+                        Turn on your public storefront for customers to browse and order.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                     <input
                       type="checkbox"
                       id="marketplaceEnabled"

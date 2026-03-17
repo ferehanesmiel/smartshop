@@ -34,18 +34,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const allNavItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', feature: 'sales-tracking' },
-    { name: 'POS', icon: ShoppingCart, path: '/dashboard/pos', feature: 'sales-tracking' },
-    { name: 'Products', icon: Package, path: '/dashboard/products', feature: 'inventory' },
-    { name: 'Sales', icon: History, path: '/dashboard/sales', feature: 'sales-tracking' },
-    { name: 'Customers', icon: Users, path: '/dashboard/customers', feature: 'customers' },
-    { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders', feature: 'orders' },
-    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts', feature: 'receipts' },
-    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports', feature: 'advanced-reports' },
-    { name: 'Settings', icon: Settings, path: '/dashboard/settings', feature: 'inventory' },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { name: 'POS', icon: ShoppingCart, path: '/dashboard/pos' },
+    { name: 'Products', icon: Package, path: '/dashboard/products' },
+    { name: 'Sales', icon: History, path: '/dashboard/sales' },
+    { name: 'Customers', icon: Users, path: '/dashboard/customers' },
+    { name: 'Orders', icon: ClipboardList, path: '/dashboard/orders', feature: 'onlineStore' },
+    { name: 'Branches', icon: Store, path: '/dashboard/branches', feature: 'multiBranch' },
+    { name: 'Receipts', icon: ReceiptIcon, path: '/dashboard/receipts' },
+    { name: 'Reports', icon: BarChart3, path: '/dashboard/reports', feature: 'advancedReports' },
+    { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
-  const navItems = allNavItems.filter(item => !item.feature || isFeatureAllowed(item.feature));
+  const navItems = allNavItems.filter(item => !item.feature || isFeatureAllowed(item.feature as any));
 
   if (isAdmin) {
     navItems.push({ name: 'Admin Panel', icon: Store, path: '/admin', feature: '' });

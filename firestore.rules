@@ -117,6 +117,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /subscriptionPlans/{planId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /products/{productId} {
       allow read: if true;
       allow create: if isShopOwner(request.resource.data.shopId);

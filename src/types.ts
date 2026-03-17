@@ -15,6 +15,10 @@ export interface Shop {
   email: string;
   address?: string;
   plan: 'basic' | 'pro' | 'premium';
+  subscriptionStatus: 'active' | 'expired' | 'trial';
+  subscriptionStartDate?: string;
+  subscriptionExpiryDate?: string;
+  onlineStoreEnabled: boolean;
   status: 'active' | 'suspended';
   createdAt: string;
   ownerUid: string;
@@ -27,6 +31,22 @@ export interface Shop {
   vatType?: 'inclusive' | 'exclusive';
   profitCalculationMethod?: 'markup' | 'margin';
   currency?: string;
+  currentProductCount: number;
+  currentUserCount: number;
+  currentBranchCount: number;
+}
+
+export interface SubscriptionPlan {
+  planId: string;
+  planName: string;
+  monthlyPrice: number;
+  maxUsers: number;
+  maxProducts: number;
+  multiBranchEnabled: boolean;
+  advancedReportsEnabled: boolean;
+  onlineStoreEnabled: boolean;
+  smsNotificationsEnabled: boolean;
+  createdAt: string;
 }
 
 export interface Product {

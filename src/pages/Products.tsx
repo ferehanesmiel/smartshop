@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useSubscription } from '../SubscriptionContext';
 import { 
   Plus, 
   Search, 
@@ -18,29 +19,20 @@ import { Product } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import QRScanner from '../components/QRScanner';
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
-import { PLANS, PlanType } from '../constants';
 import { Link } from 'react-router-dom';
 
 const Products = () => {
   const { shop } = useAuth();
+  const { isLimitReached, getLimit, plan } = useSubscription();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [limitReached, setLimitReached] = useState(false);
 
-  const currentPlan = PLANS[(shop?.plan as PlanType) || 'basic'];
-  const productLimit = currentPlan.limits.products;
-
-  useEffect(() => {
-    if (products.length >= productLimit) {
-      setLimitReached(true);
-    } else {
-      setLimitReached(false);
-    }
-  }, [products.length, productLimit]);
+  const productLimit = getLimit('products');
+  const limitReached = isLimitReached('products', products.length);
 
   const handleScan = (barcode: string) => {
     if (isModalOpen) {
@@ -85,7 +77,7 @@ const Products = () => {
 
   const handleOpenModal = (product?: Product) => {
     if (!product && limitReached) {
-      alert(`You have reached the product limit (${productLimit}) for your ${currentPlan.name} plan. Please upgrade to add more products.`);
+      alert(`You have reached the product limit (${productLimit === Infinity ? 'Unlimited' : productLimit}) for your ${plan} plan. Please upgrade to add more products.`);
       return;
     }
 
@@ -147,6 +139,10 @@ const Products = () => {
         await updateDoc(doc(db, 'products', editingProduct.productId), productData);
       } else {
         await addDoc(collection(db, 'products'), productData);
+        // Increment product count
+        await updateDoc(doc(db, 'shops', shop.shopId), {
+          currentProductCount: increment(1)
+        });
       }
       setIsModalOpen(false);
     } catch (err) {
@@ -158,6 +154,10 @@ const Products = () => {
     if (!shop || !window.confirm('Are you sure you want to delete this product?')) return;
     try {
       await deleteDoc(doc(db, 'products', productId));
+      // Decrement product count
+      await updateDoc(doc(db, 'shops', shop.shopId), {
+        currentProductCount: increment(-1)
+      });
     } catch (err) {
       console.error('Error deleting product:', err);
     }
@@ -195,7 +195,7 @@ const Products = () => {
           <div>
             <h3 className="font-bold text-orange-900">Product Limit Reached</h3>
             <p className="text-sm mt-1">
-              You have reached the maximum number of products ({productLimit}) allowed on the {currentPlan.name} plan.
+              You have reached the maximum number of products ({productLimit === Infinity ? 'Unlimited' : productLimit}) allowed on the {plan} plan.
             </p>
             <Link to="/dashboard/settings" className="text-orange-700 font-bold text-sm mt-2 inline-block hover:underline">
               Upgrade your plan &rarr;

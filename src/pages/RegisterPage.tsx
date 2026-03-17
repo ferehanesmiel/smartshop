@@ -56,6 +56,9 @@ const RegisterPage = () => {
       // 3. Create Shop Document
       const shopId = doc(collection(db, 'shops')).id;
       const planInfo = PLANS[selectedPlan];
+      const now = new Date();
+      const expiryDate = new Date();
+      expiryDate.setDate(now.getDate() + 30); // 30 days trial/subscription
 
       await setDoc(doc(db, 'shops', shopId), {
         shopId,
@@ -64,12 +67,17 @@ const RegisterPage = () => {
         phone: formData.phone,
         email: formData.email,
         plan: selectedPlan,
-        planLimits: planInfo.limits,
         subscriptionStatus: 'active',
-        createdAt: new Date().toISOString(),
+        subscriptionStartDate: now.toISOString(),
+        subscriptionExpiryDate: expiryDate.toISOString(),
+        onlineStoreEnabled: false,
+        status: 'active',
+        createdAt: now.toISOString(),
         ownerUid: user.uid,
         slug,
-        status: 'active',
+        currentProductCount: 0,
+        currentUserCount: 1,
+        currentBranchCount: 1,
       });
 
       navigate('/dashboard');
@@ -220,12 +228,40 @@ const RegisterPage = () => {
 
           <div className="space-y-4 flex-grow">
             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Plan Features</h4>
-            {planDetails.features.map((feature, i) => (
-              <div key={i} className="flex items-start gap-3">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-gray-600">{feature}</span>
+                <span className="text-sm text-gray-600">POS Sales System</span>
               </div>
-            ))}
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <span className="text-sm text-gray-600">Inventory Management</span>
+              </div>
+              {planDetails.features.advancedReports && (
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-gray-600">Advanced Reports</span>
+                </div>
+              )}
+              {planDetails.features.onlineStore && (
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-gray-600">Online Store</span>
+                </div>
+              )}
+              {planDetails.features.multiBranch && (
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-gray-600">Multi-branch Management</span>
+                </div>
+              )}
+              {planDetails.features.smsNotifications && (
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-gray-600">SMS Notifications</span>
+                </div>
+              )}
+            </div>
 
             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest pt-4">Plan Limits</h4>
             <div className="grid grid-cols-2 gap-4">
