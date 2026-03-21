@@ -1,7 +1,7 @@
 export type UserRole = 'customer' | 'shop_owner' | 'admin' | 'manager' | 'accountant' | 'inventory' | 'owner';
-export type SubscriptionPlan = 'Basic' | 'Pro' | 'Premium' | 'basic' | 'pro' | 'premium';
-export type OrderStatus = 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled' | 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
-export type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'pending' | 'paid' | 'failed';
+export type SubscriptionPlan = 'basic' | 'pro' | 'premium' | 'featured';
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'shipped' | 'delivered' | 'cancelled';
+export type PaymentStatus = 'pending' | 'paid' | 'failed';
 
 export interface User {
   id: string;
@@ -12,210 +12,304 @@ export interface User {
   language?: string;
   shop_id?: string;
   status?: string;
+  wallet_id?: string;
   createdAt: string;
+}
+
+export interface MultiLangString {
+  en: string;
+  am?: string;
+  om?: string;
+  ti?: string;
+  so?: string;
+}
+
+export interface CartItem {
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  shopId: string;
+  shopName?: string;
+  imageUrl?: string;
+}
+
+export interface Sale {
+  id?: string;
+  saleId?: string; // Backward compatibility
+  shop_id: string;
+  shopId?: string; // Backward compatibility
+  items: {
+    productId: string;
+    productName?: string; // Backward compatibility
+    name: string;
+    price: number;
+    quantity: number;
+    costPrice?: number; // Backward compatibility
+    vatRate?: number; // Backward compatibility
+    vatAmount?: number; // Backward compatibility
+  }[];
+  subtotal?: number; // Backward compatibility
+  discount?: number; // Backward compatibility
+  vatAmount?: number; // Backward compatibility
+  total_amount: number;
+  totalAmount?: number; // Backward compatibility
+  totalCost?: number; // Backward compatibility
+  totalProfit?: number; // Backward compatibility
+  payment_method: 'cash' | 'sbr' | 'telebirr' | 'mobile_money';
+  paymentMethod?: string; // Backward compatibility
+  amountPaid?: number; // Backward compatibility
+  changeAmount?: number; // Backward compatibility
+  timestamp: string;
+  createdAt?: string; // Backward compatibility
+  cashier_id: string;
+  cashierName?: string; // Backward compatibility
+  customerId?: string; // Backward compatibility
+  customerName?: string; // Backward compatibility
+  customerPhone?: string; // Backward compatibility
 }
 
 export interface Shop {
   id: string;
   shopId: string;
+  shopName?: string; // Backward compatibility
   ownerId: string;
   ownerUid?: string;
   ownerName?: string;
-  shopName: string;
   name: string;
   description: string;
+  category: string;
+  place_id?: string; // Linked to Scouts
+  location?: {
+    lat: number;
+    lng: number;
+    address: string;
+  };
+  address?: string; // Backward compatibility
+  phone?: string; // Backward compatibility
+  email?: string; // Backward compatibility
+  contact: {
+    phone: string;
+    email: string;
+  };
+  photos: string[];
+  logoUrl?: string; // Backward compatibility
+  bannerUrl?: string; // Backward compatibility
+  verified_status: boolean;
   plan: SubscriptionPlan;
-  subscriptionPlan: SubscriptionPlan;
-  logoUrl?: string;
-  bannerUrl?: string;
-  category?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  slug?: string;
+  subscriptionPlan?: SubscriptionPlan; // Backward compatibility
+  subscriptionStatus?: string; // Backward compatibility
+  subscriptionExpiryDate?: string; // Backward compatibility
   isMarketplaceEnabled?: boolean;
   isVatEnabled?: boolean;
   vatRate?: number;
   vatType?: 'inclusive' | 'exclusive';
-  profitCalculationMethod?: 'margin' | 'markup';
   currency?: string;
-  onlineStoreEnabled?: boolean;
-  subscriptionStatus?: string;
-  subscriptionExpiryDate?: string;
   status?: string;
+  slug?: string; // Backward compatibility
   createdAt: string;
+  profitCalculationMethod?: string; // Backward compatibility
+  onlineStoreEnabled?: boolean; // Backward compatibility
 }
 
 export interface Product {
   id: string;
+  productId?: string; // Backward compatibility
   shopId: string;
-  name: MultiLangString;
-  description: MultiLangString;
+  shopName?: string; // Backward compatibility
+  name: MultiLangString | string;
+  description: MultiLangString | string;
   price: number;
   costPrice: number;
   stock: number;
+  quantity: number; // For cart/order items
   vatInclusive: boolean;
+  vatRate?: number; // Backward compatibility
+  vatType?: string; // Backward compatibility
   category: string;
-  imageUrl?: string;
+  images: string[];
+  imageUrl?: string; // Backward compatibility
   barcode?: string;
   qrCode?: string;
-  createdAt: string;
-}
-
-export interface Sale {
-  id: string;
-  shopId: string;
-  items: {
-    productId: string;
-    quantity: number;
-    price: number;
-    vat: number;
-    profit: number;
-  }[];
-  totalPrice: number;
-  vat: number;
-  profit: number;
-  paymentMethod: 'Cash' | 'Telebirr' | 'Bank Transfer';
-  saleDate: string;
-  cashierId: string;
-}
-  am: string;
-  toLowerCase?: () => string;
-}
-
-export interface Product {
-  id: string;
-  productId: string;
-  shopId: string;
-  shopName?: string;
-  name: any;
-  description: any;
-  price: number;
-  costPrice: number;
-  stock: number;
-  quantity: number;
-  vatInclusive: boolean;
-  vatRate?: number;
-  vatType?: 'inclusive' | 'exclusive';
-  category: string;
-  imageUrl?: string;
-  bannerUrl?: string;
-  barcode?: string;
-  slug?: string;
   isPublishedToMarketplace?: boolean;
+  slug?: string; // Backward compatibility
   createdAt: string;
 }
 
 export interface OrderItem {
   productId: string;
-  name: any;
+  name: MultiLangString | string;
   price: number;
   quantity: number;
   shopId: string;
-  shopName?: string;
   imageUrl?: string;
 }
 
 export interface Order {
   id: string;
-  orderId: string;
-  orderNumber?: string;
-  customerId: string;
-  customerName?: string;
-  customerPhone?: string;
-  customerAddress?: string;
-  shopId: string;
-  items: OrderItem[];
-  products?: OrderItem[];
-  totalAmount: number;
-  vatAmount: number;
-  commissionAmount: number;
-  paymentMethod: string;
-  paymentStatus: PaymentStatus;
-  orderStatus: OrderStatus;
-  status?: string;
-  note?: string;
-  isMarketplaceOrder?: boolean;
+  orderId?: string; // Backward compatibility
+  orderNumber?: string; // Backward compatibility
+  user_id: string;
+  customerId?: string; // Backward compatibility
+  customerName?: string; // Backward compatibility
+  customer_name?: string; // Backward compatibility
+  customerPhone?: string; // Backward compatibility
+  customer_phone?: string; // Backward compatibility
+  customerAddress?: string; // Backward compatibility
+  customer_address?: string; // Backward compatibility
+  shop_id: string;
+  shopId?: string; // Backward compatibility
+  products: OrderItem[];
+  items?: OrderItem[]; // Backward compatibility
+  total_price: number;
+  total_amount?: number; // Backward compatibility
+  totalAmount?: number; // Backward compatibility
+  payment_method: 'SBR' | 'cash' | 'mobile_money' | 'telebirr' | 'bank_transfer' | 'sbr' | 'cod';
+  paymentMethod?: string; // Backward compatibility
+  paymentStatus?: string; // Backward compatibility
+  payment_status?: string; // Backward compatibility
+  status: OrderStatus;
+  orderStatus?: OrderStatus; // Backward compatibility
+  delivery_id?: string; // Linked to Runner Link
+  delivery_type?: 'runner' | 'pickup';
+  note?: string; // Backward compatibility
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Wallet {
+  id: string;
+  user_id: string;
+  balance_sbr: number;
+  balance_birr: number;
+  updatedAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  shop_id: string;
+  plan: SubscriptionPlan;
+  cost_sbr: number;
+  duration_days: number;
+  active_status: boolean;
+  expiryDate: string;
   createdAt: string;
 }
 
-export interface CartItem extends OrderItem {}
+export interface Rating {
+  id: string;
+  user_id: string;
+  shop_id?: string;
+  product_id?: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface Delivery {
+  id: string;
+  order_id: string;
+  runner_id?: string;
+  pickup: {
+    lat: number;
+    lng: number;
+    address: string;
+  };
+  dropoff: {
+    lat: number;
+    lng: number;
+    address: string;
+  };
+  status: 'pending' | 'assigned' | 'picked_up' | 'delivered';
+  live_location?: {
+    lat: number;
+    lng: number;
+  };
+  updatedAt: string;
+}
 
 export interface SiteSettings {
+  id: string;
   name: string;
+  siteName?: string; // Backward compatibility
   description: string;
-  siteName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  socialLinks?: {
+    facebook?: string;
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+  };
+  maintenanceMode: boolean;
+  registrationEnabled: boolean;
+  primaryColor?: string; // Backward compatibility
+  updatedAt: string;
 }
 
 export interface Branch {
   id: string;
-  branchId: string;
-  shopId: string;
+  branchId?: string; // Backward compatibility
+  shop_id: string;
   name: string;
-  address?: string;
-  phone?: string;
-  managerName?: string;
-  status?: string;
+  location: string;
+  address?: string; // Backward compatibility
+  phone: string;
+  manager_id?: string;
+  managerName?: string; // Backward compatibility
+  status: 'active' | 'inactive';
+  createdAt: string;
 }
 
 export interface Customer {
   id: string;
-  customerId: string;
+  customerId?: string; // Backward compatibility
+  shop_id: string;
   name: string;
-  phone?: string;
   email?: string;
-  loyaltyPoints?: number;
-  purchaseCount?: number;
-  lastPurchaseDate?: string;
-}
-
-export interface Sale {
-  id: string;
-  saleId: string;
-  total: number;
-  totalAmount: number;
-  subtotal: number;
-  discount: number;
-  vatAmount: number;
-  totalCost: number;
-  totalProfit: number;
-  paymentMethod: string;
-  cashierName?: string;
-  customerName?: string;
-  customerPhone?: string;
-  amountPaid?: number;
-  changeAmount?: number;
-  items: SaleItem[];
+  phone: string;
+  address?: string;
+  total_spent: number;
+  orders_count: number;
+  purchaseCount?: number; // Backward compatibility
+  loyaltyPoints?: number; // Backward compatibility
+  last_visit?: string;
+  lastPurchaseDate?: string; // Backward compatibility
   createdAt: string;
 }
 
 export interface SaleItem {
   productId: string;
-  productName?: string;
-  quantity: number;
+  productName: string;
   price: number;
+  quantity: number;
   costPrice: number;
-  vatRate?: number;
-  vatType?: string;
-  netPrice?: number;
-  vatAmount?: number;
-  sellingPrice?: number;
-  profit?: number;
-  totalItemPrice?: number;
-  totalItemVat?: number;
-  totalItemNet?: number;
-  totalItemProfit?: number;
-  totalItemCost?: number;
+  vatRate: number;
+  vatAmount: number;
+  vatType?: string; // Backward compatibility
 }
 
 export interface Receipt {
   id: string;
-  receiptId: string;
-  shopName?: string;
+  receiptId?: string; // Backward compatibility
+  saleId: string;
+  shopId: string;
+  shopName: string;
+  shopAddress: string;
+  shopPhone: string;
+  cashierName: string;
   customerPhone?: string;
+  items: SaleItem[];
+  subtotal: number;
+  vatAmount: number;
+  discount: number;
   totalAmount: number;
   paymentMethod: string;
-  cashierName?: string;
-  items: any[];
-  createdAt: string;
+  amountPaid: number;
+  changeAmount: number;
+  timestamp: string;
+  createdAt?: string; // Backward compatibility
 }

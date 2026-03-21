@@ -217,13 +217,13 @@ const MarketplaceShop = () => {
                           onClick={() => {
                             if (product.quantity > 0) {
                               addToCart({
-                                productId: product.productId,
+                                productId: product.productId || product.id,
                                 name: name,
                                 price: product.price,
                                 quantity: 1,
-                                imageUrl: product.imageUrl,
+                                imageUrl: product.imageUrl || (product.images && product.images[0]),
                                 shopId: product.shopId,
-                                shopName: shop.shopName
+                                shopName: shop.name || shop.shopName
                               });
                             }
                           }}

@@ -9,6 +9,7 @@
         "email": { "type": "string", "format": "email" },
         "role": { "type": "string", "enum": ["customer", "shop_owner", "admin"] },
         "name": { "type": "string" },
+        "wallet_id": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "role"]
@@ -22,11 +23,16 @@
         "ownerId": { "type": "string" },
         "name": { "type": "string" },
         "description": { "type": "string" },
-        "subscriptionPlan": { "type": "string", "enum": ["Basic", "Pro", "Premium"] },
-        "logoUrl": { "type": "string" },
+        "category": { "type": "string" },
+        "place_id": { "type": "string" },
+        "location": { "type": "object" },
+        "contact": { "type": "object" },
+        "photos": { "type": "array", "items": { "type": "string" } },
+        "verified_status": { "type": "boolean" },
+        "plan": { "type": "string", "enum": ["basic", "pro", "premium", "featured"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "ownerId", "name", "subscriptionPlan"]
+      "required": ["id", "ownerId", "name", "plan"]
     },
     "Product": {
       "title": "Product",
@@ -35,15 +41,17 @@
       "properties": {
         "id": { "type": "string" },
         "shopId": { "type": "string" },
-        "name": { "type": "object", "description": "Multi-language name {en: string, am: string}" },
-        "description": { "type": "object", "description": "Multi-language description {en: string, am: string}" },
+        "name": { "type": "object" },
+        "description": { "type": "object" },
         "price": { "type": "number" },
         "costPrice": { "type": "number" },
         "stock": { "type": "integer" },
         "vatInclusive": { "type": "boolean" },
         "category": { "type": "string" },
-        "imageUrl": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
         "barcode": { "type": "string" },
+        "qrCode": { "type": "string" },
+        "isPublishedToMarketplace": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "shopId", "name", "price", "stock"]
@@ -54,35 +62,76 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "customerId": { "type": "string" },
-        "shopId": { "type": "string" },
-        "items": { "type": "array", "items": { "type": "object" } },
-        "totalAmount": { "type": "number" },
-        "vatAmount": { "type": "number" },
-        "commissionAmount": { "type": "number" },
-        "paymentMethod": { "type": "string", "enum": ["Cash on Delivery", "Telebirr", "Bank Transfer"] },
-        "paymentStatus": { "type": "string", "enum": ["Pending", "Paid", "Failed"] },
-        "orderStatus": { "type": "string", "enum": ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"] },
+        "user_id": { "type": "string" },
+        "shop_id": { "type": "string" },
+        "products": { "type": "array", "items": { "type": "object" } },
+        "total_price": { "type": "number" },
+        "payment_method": { "type": "string", "enum": ["SBR", "cash", "mobile_money"] },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "preparing", "ready", "delivered", "cancelled"] },
+        "delivery_id": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "customerId", "shopId", "items", "totalAmount"]
+      "required": ["id", "user_id", "shop_id", "products", "total_price"]
     },
-    "Sale": {
-      "title": "Sale",
-      "description": "POS transaction record",
+    "Wallet": {
+      "title": "Wallet",
+      "description": "User's digital wallet",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "shopId": { "type": "string" },
-        "items": { "type": "array", "items": { "type": "object" } },
-        "totalPrice": { "type": "number" },
-        "vat": { "type": "number" },
-        "profit": { "type": "number" },
-        "paymentMethod": { "type": "string", "enum": ["Cash", "Telebirr", "Bank Transfer"] },
-        "saleDate": { "type": "string", "format": "date-time" },
-        "cashierId": { "type": "string" }
+        "user_id": { "type": "string" },
+        "balance_sbr": { "type": "number" },
+        "balance_birr": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "shopId", "items", "totalPrice", "profit", "paymentMethod", "saleDate"]
+      "required": ["id", "user_id", "balance_sbr", "balance_birr"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "Shop's promotion subscription",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "shop_id": { "type": "string" },
+        "plan": { "type": "string", "enum": ["basic", "pro", "premium", "featured"] },
+        "cost_sbr": { "type": "number" },
+        "duration_days": { "type": "number" },
+        "active_status": { "type": "boolean" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "shop_id", "plan", "cost_sbr"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "Review and rating for shop or product",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "shop_id": { "type": "string" },
+        "product_id": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "user_id", "rating"]
+    },
+    "Delivery": {
+      "title": "Delivery",
+      "description": "Runner Link delivery request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "order_id": { "type": "string" },
+        "runner_id": { "type": "string" },
+        "pickup": { "type": "object" },
+        "dropoff": { "type": "object" },
+        "status": { "type": "string", "enum": ["pending", "assigned", "picked_up", "delivered"] },
+        "live_location": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "order_id", "pickup", "dropoff", "status"]
     }
   },
   "firestore": {
@@ -90,6 +139,9 @@
     "/shops/{shopId}": { "schema": "Shop", "description": "Store information" },
     "/products/{productId}": { "schema": "Product", "description": "Products in the marketplace" },
     "/orders/{orderId}": { "schema": "Order", "description": "Customer orders" },
-    "/sales/{saleId}": { "schema": "Sale", "description": "POS sales transactions" }
+    "/wallets/{walletId}": { "schema": "Wallet", "description": "User wallets" },
+    "/subscriptions/{subId}": { "schema": "Subscription", "description": "Shop subscriptions" },
+    "/ratings/{ratingId}": { "schema": "Rating", "description": "Reviews and ratings" },
+    "/deliveries/{deliveryId}": { "schema": "Delivery", "description": "Delivery tracking" }
   }
 }

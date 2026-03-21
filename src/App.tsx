@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './AuthContext';
 import { SubscriptionProvider } from './SubscriptionContext';
 import { CartProvider } from './CartContext';
+import { WalletProvider } from './WalletContext';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -82,8 +83,9 @@ export default function App() {
   return (
     <AuthProvider>
       <SubscriptionProvider>
-        <CartProvider>
-          <ErrorBoundary>
+        <WalletProvider>
+          <CartProvider>
+            <ErrorBoundary>
             <Toaster position="top-right" />
             <Router>
               <Routes>
@@ -207,6 +209,7 @@ export default function App() {
           </Router>
           </ErrorBoundary>
         </CartProvider>
+        </WalletProvider>
       </SubscriptionProvider>
     </AuthProvider>
   );

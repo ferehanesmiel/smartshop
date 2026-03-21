@@ -4,17 +4,28 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
-  --color-primary: #10b981; /* Emerald 500 */
-  --color-secondary: #064e3b; /* Emerald 900 */
+  --color-brand: #FF4500; /* Fire Orange */
+  --color-brand-dark: #CC3700;
+  --color-dark: #0A0A0A;
+  --color-dark-surface: #1A1A1A;
+  --color-dark-border: #2A2A2A;
 }
 
 @layer base {
   body {
-    @apply bg-stone-50 text-stone-900 font-sans;
+    @apply bg-dark text-white font-sans;
   }
 }
 
 @layer utilities {
+  .glass {
+    @apply bg-dark-surface/80 backdrop-blur-md border border-dark-border;
+  }
+
+  .card-shadow {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
   @media (max-width: 767px) {
     .responsive-table {
       display: block;
@@ -29,9 +40,9 @@
     }
     .responsive-table tr {
       margin-bottom: 1rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--color-dark-border);
       border-radius: 0.5rem;
-      background-color: #ffffff;
+      background-color: var(--color-dark-surface);
       padding: 0.5rem;
     }
     .responsive-table td {
@@ -39,7 +50,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 0.75rem;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid var(--color-dark-border);
       text-align: right;
     }
     .responsive-table td:last-child {
@@ -48,17 +59,9 @@
     .responsive-table td::before {
       content: attr(data-label);
       font-weight: 600;
-      color: #4b5563;
+      color: #9ca3af;
       text-align: left;
       margin-right: 1rem;
     }
   }
-}
-
-.glass {
-  @apply bg-white/80 backdrop-blur-md border border-white/20;
-}
-
-.card-shadow {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
