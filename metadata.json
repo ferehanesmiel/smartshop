@@ -1,6 +1,6 @@
 {
-  "name": "SmartShop Ethiopia",
-  "description": "Modern Cloud POS and Shop Management System for Ethiopian Retail Stores.",
+  "name": "Zemen Digital City API",
+  "description": "A complete RESTful + real-time API system for the Zemen Digital City ecosystem, connecting Scouts, Market, Runner Link, and Blooming Heart.",
   "requestFramePermissions": [
     "camera",
     "microphone",

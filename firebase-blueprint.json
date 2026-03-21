@@ -132,6 +132,79 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "order_id", "pickup", "dropoff", "status"]
+    },
+    "Place": {
+      "title": "Place",
+      "description": "City place added by scouts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "location": { "type": "object" },
+        "addedBy": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "photos": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "category", "location", "addedBy"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Scout task",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "reward_sbr": { "type": "number" },
+        "status": { "type": "string", "enum": ["open", "closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "reward_sbr", "status"]
+    },
+    "TaskSubmission": {
+      "title": "TaskSubmission",
+      "description": "Submission for a scout task",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "taskId": { "type": "string" },
+        "userId": { "type": "string" },
+        "data": { "type": "object" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "taskId", "userId", "status"]
+    },
+    "Donation": {
+      "title": "Donation",
+      "description": "Blooming Heart donation campaign",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "goal_birr": { "type": "number" },
+        "raised_birr": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "goal_birr", "raised_birr", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "message", "read"]
     }
   },
   "firestore": {
@@ -142,6 +215,11 @@
     "/wallets/{walletId}": { "schema": "Wallet", "description": "User wallets" },
     "/subscriptions/{subId}": { "schema": "Subscription", "description": "Shop subscriptions" },
     "/ratings/{ratingId}": { "schema": "Rating", "description": "Reviews and ratings" },
-    "/deliveries/{deliveryId}": { "schema": "Delivery", "description": "Delivery tracking" }
+    "/deliveries/{deliveryId}": { "schema": "Delivery", "description": "Delivery tracking" },
+    "/places/{placeId}": { "schema": "Place", "description": "City places" },
+    "/tasks/{taskId}": { "schema": "Task", "description": "Scout tasks" },
+    "/submissions/{subId}": { "schema": "TaskSubmission", "description": "Task submissions" },
+    "/donations/{donationId}": { "schema": "Donation", "description": "Donation campaigns" },
+    "/notifications/{notifId}": { "schema": "Notification", "description": "User notifications" }
   }
 }
